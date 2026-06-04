@@ -717,6 +717,84 @@ function imgWithFallback(src, fallback, cls='') {
   return `<img class="${cls}" src="${src}" onerror="this.src='${fallback}'" alt="">`;
 }
 
+
+/* ── SUPABASE CONFIG ── */
+const SUPABASE_URL = 'https://lhxanhakrrxlbjuazikk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
+
+// Gera ou recupera um ID único para esta loja
+function getLojId() {
+  let id = localStorage.getItem('loja_id');
+  if (!id) {
+    id = 'loja_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+    localStorage.setItem('loja_id', id);
+  }
+  return id;
+}
+const LOJA_ID = getLojId();
+
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || '',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok && res.status !== 406) console.error('Supabase error:', res.status, await res.text());
+  return res.status === 204 ? null : res.json().catch(() => null);
+}
+
+async function carregarDoSupabase() {
+  try {
+    const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=*`);
+    if (data && data.length > 0) {
+      const row = data[0];
+      configs          = row.configs         || defaultConfigs;
+      pizzas           = row.pizzas          || [];
+      acais            = row.acais           || [];
+      bebidas          = row.bebidas         || [];
+      listaAdicionais  = row.adicionais      || [];
+      if (row.loja_fechada) localStorage.setItem('loja_fechada','true');
+      else localStorage.removeItem('loja_fechada');
+    } else {
+      // primeira vez — cria registro no banco
+      await sbFetch('/rest/v1/cardapio', {
+        method: 'POST',
+        prefer: 'return=minimal',
+        body: JSON.stringify({
+          loja_id: LOJA_ID,
+          configs: defaultConfigs,
+          pizzas: [], acais: [], bebidas: [], adicionais: [], loja_fechada: false
+        })
+      });
+    }
+  } catch(e) { console.warn('Offline — usando localStorage', e); }
+  renderMenu();
+  aplicarConfigs();
+}
+
+async function salvarNoSupabase() {
+  try {
+    await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}`, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: JSON.stringify({
+        configs,
+        pizzas,
+        acais,
+        bebidas,
+        adicionais: listaAdicionais,
+        loja_fechada: localStorage.getItem('loja_fechada') === 'true',
+        updated_at: new Date().toISOString()
+      })
+    });
+  } catch(e) { console.warn('Erro ao salvar no Supabase:', e); }
+}
+
 /* ── DEFAULTS ── */
 const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:""};
 const defaultPizzas=[];
@@ -729,6 +807,8 @@ let pizzas =JSON.parse(localStorage.getItem("app_pizzas")) ||defaultPizzas;
 let acais  =JSON.parse(localStorage.getItem("app_acais"))  ||defaultAcais;
 let bebidas=JSON.parse(localStorage.getItem("app_bebidas"))||defaultBebidas;
 let listaAdicionais=JSON.parse(localStorage.getItem("app_adicionais"))||defaultAdicionais;
+// Carrega do Supabase ao iniciar (substitui os valores acima se encontrar no banco)
+document.addEventListener('DOMContentLoaded', () => carregarDoSupabase());
 
 let carrinho=[],acaiEm=null,adcSel=[],pizzaEm=null,bordaNome="Sem Borda",bordaPreco=0;
 
@@ -1104,6 +1184,7 @@ function saveAdminSettings(){
 }
 function copiarPix(){navigator.clipboard.writeText(document.getElementById("pix-key-text").innerText).then(()=>alert("Chave PIX copiada!"));}
 function enviarPedido(){
+  salvarNoSupabase();
   if(localStorage.getItem('loja_fechada')==='true'){
     alert('⚠️ A loja está fechada no momento. Tente novamente mais tarde!');
     return;
@@ -1296,7 +1377,9 @@ function exportarParaCliente(){
 let pizzas =JSON.parse(localStorage.getItem("app_pizzas")) ||defaultPizzas;
 let acais  =JSON.parse(localStorage.getItem("app_acais"))  ||defaultAcais;
 let bebidas=JSON.parse(localStorage.getItem("app_bebidas"))||defaultBebidas;
-let listaAdicionais=JSON.parse(localStorage.getItem("app_adicionais"))||defaultAdicionais;`;
+let listaAdicionais=JSON.parse(localStorage.getItem("app_adicionais"))||defaultAdicionais;
+// Carrega do Supabase ao iniciar (substitui os valores acima se encontrar no banco)
+document.addEventListener('DOMContentLoaded', () => carregarDoSupabase());`;
 
   const initNew = `// ── DADOS DO CLIENTE (embutidos na exportação) ──
 let configs=${dadosConfigs};
@@ -1543,6 +1626,7 @@ function toggleLoja(){
   const fechada = localStorage.getItem('loja_fechada') === 'true';
   const novoStatus = !fechada;
   localStorage.setItem('loja_fechada', novoStatus);
+  salvarNoSupabase();
   atualizarStatusLoja();
   if(novoStatus){
     alert('🔒 Loja fechada! Os clientes não conseguirão finalizar pedidos.');
