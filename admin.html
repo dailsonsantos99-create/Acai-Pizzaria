@@ -154,9 +154,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         </div>
       </div>
       <button class="btn-gerar" onclick="gerarCliente()">Gerar link do cliente</button>
-      <div class="link-box" id="link-box">
-        <span class="link-url" id="link-url"></span>
-        <button class="btn-copy" id="btn-copy" onclick="copiar()">📋 Copiar</button>
+      <div class="link-box" id="link-box" style="flex-direction:column;align-items:stretch;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">🔐 Link do Painel (logista)</div>
+            <span class="link-url" id="link-url"></span>
+          </div>
+          <button class="btn-copy" id="btn-copy" onclick="copiar()">📋 Copiar</button>
+        </div>
+        <div id="link-cardapio-wrap" style="display:none;flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);padding-top:10px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">🛒 Link do Cardápio (cliente final)</div>
+              <span class="link-url" id="link-cardapio"></span>
+            </div>
+            <button class="btn-copy" onclick="copiarCardapio()">📋 Copiar</button>
+          </div>
+        </div>
       </div>
     </div>
 
