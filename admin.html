@@ -210,6 +210,8 @@ function gerarCliente() {
   if (!nome || !slug) { alert('Preencha o nome e o ID do link.'); return; }
   const url = BASE + '?loja=' + slug;
   document.getElementById('link-url').textContent = url;
+  document.getElementById('link-cardapio').textContent = urlCardapio;
+  document.getElementById('link-cardapio-wrap').style.display = 'flex';
   document.getElementById('link-box').style.display = 'flex';
   const btn = document.getElementById('btn-copy');
   btn.textContent = '📋 Copiar';
