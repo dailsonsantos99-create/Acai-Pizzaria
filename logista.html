@@ -1998,21 +1998,31 @@ function openAdminModal() {
 }
 
 // Override saveAdminSettings para salvar no Supabase e atualizar header
-const _origSave = saveAdminSettings;
 function saveAdminSettings() {
-  configs.name = document.getElementById("config-name").value.trim() || 'Minha Loja';
-  configs.nameSecondary = document.getElementById("config-name2").value.trim();
-  configs.desc = document.getElementById("config-desc").value.trim();
-  configs.whatsapp = document.getElementById("config-whatsapp").value.replace(/\D/g,'');
-  configs.whatsappLogista = document.getElementById("config-whatsapp-logista").value.replace(/\D/g,'');
-  configs.pix = document.getElementById("config-pix").value.trim();
-  configs.tax = parseFloat(document.getElementById("config-tax").value) || 5;
-  const senhaInput = document.getElementById('config-senha-atual');
-  if(senhaInput && senhaInput.value) configs.adminSenha = senhaInput.value;
+  // Lê campos com segurança (podem não existir na página do logista)
+  const g = id => document.getElementById(id);
+  if(g("config-name"))           configs.name            = g("config-name").value.trim() || configs.name || 'Minha Loja';
+  if(g("config-name2"))          configs.nameSecondary   = g("config-name2").value.trim();
+  if(g("config-desc"))           configs.desc            = g("config-desc").value.trim();
+  if(g("config-whatsapp"))       configs.whatsapp        = g("config-whatsapp").value.replace(/\D/g,'');
+  if(g("config-whatsapp-logista")) configs.whatsappLogista = g("config-whatsapp-logista").value.replace(/\D/g,'');
+  if(g("config-pix"))            configs.pix             = g("config-pix").value.trim();
+  if(g("config-tax"))            configs.tax             = parseFloat(g("config-tax").value) || 5;
+  if(g("config-senha-atual") && g("config-senha-atual").value) configs.adminSenha = g("config-senha-atual").value;
+  if(g("color-primary"))         configs.colorPrimary    = g("color-primary").value;
+  if(g("color-secondary"))       configs.colorSecondary  = g("color-secondary").value;
+  if(g("config-tax-entrega"))    configs.tax             = parseFloat(g("config-tax-entrega").value) || configs.tax || 5;
+  
   salvarNoSupabase();
-  // Atualiza header
+  
   const nomeEl = document.getElementById('painel-nome-loja');
   if(nomeEl) nomeEl.textContent = configs.name;
+  
+  if(localStorage.getItem('loja_fechada')==='true'){
+    const tb = document.getElementById('btn-toggle-loja');
+    if(tb) tb.textContent='🔓 Abrir Loja';
+  }
+  
   alert('✅ Configurações salvas!');
   renderMenu();
   aplicarMarca();
