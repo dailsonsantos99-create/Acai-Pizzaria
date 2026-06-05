@@ -808,11 +808,11 @@ const defaultAcais=[];
 const defaultBebidas=[];
 const defaultAdicionais=[];
 
-let configs=JSON.parse(localStorage.getItem("app_configs"))||defaultConfigs;
-let pizzas =JSON.parse(localStorage.getItem("app_pizzas")) ||defaultPizzas;
-let acais  =JSON.parse(localStorage.getItem("app_acais"))  ||defaultAcais;
-let bebidas=JSON.parse(localStorage.getItem("app_bebidas"))||defaultBebidas;
-let listaAdicionais=JSON.parse(localStorage.getItem("app_adicionais"))||defaultAdicionais;
+let configs=defaultConfigs;
+let pizzas =defaultPizzas;
+let acais  =defaultAcais;
+let bebidas=defaultBebidas;
+let listaAdicionais=defaultAdicionais;
 // Carrega do Supabase ao iniciar (substitui os valores acima se encontrar no banco)
 document.addEventListener('DOMContentLoaded', () => carregarDoSupabase());
 
@@ -1016,8 +1016,7 @@ async function trocarImgPizza(id){
   inp.onchange=async()=>{
     const b64=await fileToB64(inp.files[0]);
     pizzas=pizzas.map(p=>p.id===id?{...p,img:b64}:p);
-    localStorage.setItem('app_pizzas',JSON.stringify(pizzas));
-    renderAdminPizzas(); renderMenu();
+    renderAdminPizzas(); renderMenu(); salvarNoSupabase();
   };
   inp.click();
 }
@@ -1026,8 +1025,7 @@ async function trocarImgAcai(id){
   inp.onchange=async()=>{
     const b64=await fileToB64(inp.files[0]);
     acais=acais.map(a=>a.id===id?{...a,img:b64}:a);
-    localStorage.setItem('app_acais',JSON.stringify(acais));
-    renderAdminAcais(); renderMenu();
+    renderAdminAcais(); renderMenu(); salvarNoSupabase();
   };
   inp.click();
 }
@@ -1036,8 +1034,7 @@ async function trocarImgBebida(id){
   inp.onchange=async()=>{
     const b64=await fileToB64(inp.files[0]);
     bebidas=bebidas.map(b=>b.id===id?{...b,img:b64}:b);
-    localStorage.setItem('app_bebidas',JSON.stringify(bebidas));
-    renderAdminBebidas(); renderMenu();
+    renderAdminBebidas(); renderMenu(); salvarNoSupabase();
   };
   inp.click();
 }
@@ -1134,8 +1131,7 @@ function adicionarPizza(){
   const g=parseFloat(document.getElementById("new-pizza-priceG").value);
   if(!n||!m||!g)return alert("Preencha Nome, Preço M e Preço G!");
   pizzas.push({id:"p_"+Date.now(),name:n,prices:{M:m,G:g},desc:d||"Sabor especial."});
-  localStorage.setItem("app_pizzas",JSON.stringify(pizzas));
-  ["new-pizza-name","new-pizza-desc","new-pizza-priceM","new-pizza-priceG"].forEach(id=>document.getElementById(id).value="");
+    ["new-pizza-name","new-pizza-desc","new-pizza-priceM","new-pizza-priceG"].forEach(id=>document.getElementById(id).value="");
   toggleFormBox("pizza-form-box");renderAdminPizzas();renderMenu();
 }
 function adicionarAcai(){
@@ -1144,8 +1140,7 @@ function adicionarAcai(){
   const l=parseInt(document.getElementById("new-acai-limit").value)||5;
   if(!n||!p)return alert("Preencha Nome e Preço!");
   acais.push({id:"a_"+Date.now(),name:n,price:p,limit:l});
-  localStorage.setItem("app_acais",JSON.stringify(acais));
-  ["new-acai-name","new-acai-price"].forEach(id=>document.getElementById(id).value="");
+    ["new-acai-name","new-acai-price"].forEach(id=>document.getElementById(id).value="");
   toggleFormBox("acai-form-box");renderAdminAcais();renderMenu();
 }
 function adicionarBebidaAdmin(){
@@ -1154,13 +1149,12 @@ function adicionarBebidaAdmin(){
   const p=parseFloat(document.getElementById("new-bebida-price").value);
   if(!n||!p)return alert("Preencha Nome e Preço!");
   bebidas.push({id:"b_"+Date.now(),name:n,price:p,desc:d||""});
-  localStorage.setItem("app_bebidas",JSON.stringify(bebidas));
-  ["new-bebida-name","new-bebida-desc","new-bebida-price"].forEach(id=>document.getElementById(id).value="");
+    ["new-bebida-name","new-bebida-desc","new-bebida-price"].forEach(id=>document.getElementById(id).value="");
   toggleFormBox("bebida-form-box");renderAdminBebidas();renderMenu();
 }
-function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>p.id!==id);localStorage.setItem("app_pizzas",JSON.stringify(pizzas));renderAdminPizzas();renderMenu();}}
-function deletarAcai(id){if(confirm("Remover açaí?")){acais=acais.filter(a=>a.id!==id);localStorage.setItem("app_acais",JSON.stringify(acais));renderAdminAcais();renderMenu();}}
-function deletarBebida(id){if(confirm("Remover bebida?")){bebidas=bebidas.filter(b=>b.id!==id);localStorage.setItem("app_bebidas",JSON.stringify(bebidas));renderAdminBebidas();renderMenu();}}
+function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>p.id!==id);renderAdminPizzas();renderMenu();salvarNoSupabase();}}
+function deletarAcai(id){if(confirm("Remover açaí?")){acais=acais.filter(a=>a.id!==id);renderAdminAcais();renderMenu();salvarNoSupabase();}}
+function deletarBebida(id){if(confirm("Remover bebida?")){bebidas=bebidas.filter(b=>b.id!==id);renderAdminBebidas();renderMenu();salvarNoSupabase();}}
 
 function saveAdminSettings(){
   configs.name=document.getElementById("config-name1").value.trim()||"Açaí+";
@@ -1180,12 +1174,7 @@ function saveAdminSettings(){
     if(v)a.price=parseFloat(v.value);if(l)a.limit=parseInt(l.value);
   });
   bebidas.forEach(b=>{const v=document.getElementById(`adm-b-${b.id}`);if(v)b.price=parseFloat(v.value);});
-  localStorage.setItem("app_configs",JSON.stringify(configs));
-  localStorage.setItem("app_pizzas",JSON.stringify(pizzas));
-  localStorage.setItem("app_acais",JSON.stringify(acais));
-  localStorage.setItem("app_bebidas",JSON.stringify(bebidas));
-  localStorage.setItem("app_adicionais",JSON.stringify(listaAdicionais));
-  alert("✅ Configurações salvas!");
+            alert("✅ Configurações salvas!");
   closeModal("admin-modal");renderMenu();atualizarCarrinhoBar();
 }
 function copiarPix(){navigator.clipboard.writeText(document.getElementById("pix-key-text").innerText).then(()=>alert("Chave PIX copiada!"));}
@@ -1255,8 +1244,7 @@ function trocarLogo(){
     const r=new FileReader();
     r.onload=()=>{
       configs.logo=r.result;
-      localStorage.setItem('app_configs',JSON.stringify(configs));
-      aplicarMarca();
+            aplicarMarca();
       atualizarLogoPreview();
     };
     r.readAsDataURL(inp.files[0]);
@@ -1265,8 +1253,7 @@ function trocarLogo(){
 }
 function removerLogo(){
   configs.logo="";
-  localStorage.setItem('app_configs',JSON.stringify(configs));
-  aplicarMarca();
+    aplicarMarca();
   atualizarLogoPreview();
 }
 function atualizarLogoPreview(){
@@ -1309,8 +1296,7 @@ function aplicarCores(p,s){
 function salvarAparencia(){
   configs.colorPrimary=document.getElementById('color-primary').value;
   configs.colorSecondary=document.getElementById('color-secondary').value;
-  localStorage.setItem('app_configs',JSON.stringify(configs));
-  alert('✅ Aparência salva!');
+    alert('✅ Aparência salva!');
 }
 
 /* ── SENHA ── */
@@ -1351,11 +1337,7 @@ function resetarSistema(){
   location.reload();
 }
 
-// Limpa descrição antiga
-(function(){
-  const cfg=JSON.parse(localStorage.getItem("app_configs")||"{}");
-  if(cfg.desc && cfg.desc.toLowerCase().includes("joão lanches")){cfg.desc="";localStorage.setItem("app_configs",JSON.stringify(cfg));}
-})();
+
 
 // Aplica cores e logo salvos
 (function(){
@@ -1379,11 +1361,11 @@ function exportarParaCliente(){
 
   // Replace the init block so the exported file loads data directly
   // (no localStorage dependency — data is baked in)
-  const initOld = `let configs=JSON.parse(localStorage.getItem("app_configs"))||defaultConfigs;
-let pizzas =JSON.parse(localStorage.getItem("app_pizzas")) ||defaultPizzas;
-let acais  =JSON.parse(localStorage.getItem("app_acais"))  ||defaultAcais;
-let bebidas=JSON.parse(localStorage.getItem("app_bebidas"))||defaultBebidas;
-let listaAdicionais=JSON.parse(localStorage.getItem("app_adicionais"))||defaultAdicionais;
+  const initOld = `let configs=defaultConfigs;
+let pizzas =defaultPizzas;
+let acais  =defaultAcais;
+let bebidas=defaultBebidas;
+let listaAdicionais=defaultAdicionais;
 // Carrega do Supabase ao iniciar (substitui os valores acima se encontrar no banco)
 document.addEventListener('DOMContentLoaded', () => carregarDoSupabase());`;
 
@@ -1393,23 +1375,8 @@ let pizzas=${dadosPizzas};
 let acais=${dadosAcais};
 let bebidas=${dadosBebidas};
 let listaAdicionais=${dadosAdicionais};
-// Injeta senha e dados no localStorage do cliente na 1ª abertura
+// Dados carregados pelo Supabase
 (function(){
-  if(!localStorage.getItem('_client_initialized')){
-    localStorage.setItem('app_configs',JSON.stringify(configs));
-    localStorage.setItem('app_pizzas',JSON.stringify(pizzas));
-    localStorage.setItem('app_acais',JSON.stringify(acais));
-    localStorage.setItem('app_bebidas',JSON.stringify(bebidas));
-    localStorage.setItem('app_adicionais',JSON.stringify(listaAdicionais));
-    localStorage.setItem('admin_senha','${dadosSenha}');
-    localStorage.setItem('_client_initialized','1');
-  } else {
-    // Se já inicializado, usa dados do localStorage do cliente
-    configs=JSON.parse(localStorage.getItem('app_configs'))||configs;
-    pizzas=JSON.parse(localStorage.getItem('app_pizzas'))||pizzas;
-    acais=JSON.parse(localStorage.getItem('app_acais'))||acais;
-    bebidas=JSON.parse(localStorage.getItem('app_bebidas'))||bebidas;
-    listaAdicionais=JSON.parse(localStorage.getItem('app_adicionais'))||listaAdicionais;
   }
 })();`;
 
