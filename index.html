@@ -584,13 +584,18 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
     <div class="admin-section">
       <div class="admin-section-head">
         <div class="admin-section-title">🍕 Pizzas</div>
-        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Seções visíveis</div>
+        <button class="btn btn-icon-add" onclick="toggleFormBox('pizza-form-box')">➕ Adicionar</button>
+      </div>
+
+      <!-- Seções visíveis -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Seções visíveis</div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
-          <div>
+          <div style="flex:1;min-width:0;margin-right:12px;">
             <div style="font-size:14px;font-weight:600;">🍕 Aba Pizzas</div>
-            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de pizzas no cardápio</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de pizzas</div>
           </div>
-          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;flex-shrink:0;">
             <input type="checkbox" id="toggle-abaPizzas" style="opacity:0;width:0;height:0;" onchange="toggleAba('abaPizzas',this.checked)">
             <span id="span-abaPizzas" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
               <span style="position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:.3s;"></span>
@@ -598,11 +603,11 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
           </label>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
-          <div>
+          <div style="flex:1;min-width:0;margin-right:12px;">
             <div style="font-size:14px;font-weight:600;">🍧 Aba Açaí</div>
-            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de açaís no cardápio</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de açaís</div>
           </div>
-          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;flex-shrink:0;">
             <input type="checkbox" id="toggle-abaAcai" style="opacity:0;width:0;height:0;" onchange="toggleAba('abaAcai',this.checked)">
             <span id="span-abaAcai" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
               <span style="position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:.3s;"></span>
@@ -610,44 +615,46 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
           </label>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
-          <div>
+          <div style="flex:1;min-width:0;margin-right:12px;">
             <div style="font-size:14px;font-weight:600;">🥤 Aba Bebidas</div>
-            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de bebidas no cardápio</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de bebidas</div>
           </div>
-          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;flex-shrink:0;">
             <input type="checkbox" id="toggle-abaBebidas" style="opacity:0;width:0;height:0;" onchange="toggleAba('abaBebidas',this.checked)">
             <span id="span-abaBebidas" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
               <span style="position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:.3s;"></span>
             </span>
           </label>
         </div>
-        <div style="margin-bottom:12px;"></div>
-        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px;">Nomes das seções</div>
-        <div class="form-row" style="margin-bottom:8px;">
-          <div style="flex:0 0 40px"><label class="field-label">Emoji</label><input type="text" id="cfg-emoj-pizzas" maxlength="2" style="text-align:center;" oninput="atualizarNomeSecao()"></div>
-          <div style="flex:1"><label class="field-label">Nome da seção 1</label><input type="text" id="cfg-nome-pizzas" placeholder="Ex: Hambúrgueres" oninput="atualizarNomeSecao()"></div>
-        </div>
-        <div class="form-row" style="margin-bottom:8px;">
-          <div style="flex:0 0 40px"><label class="field-label">Emoji</label><input type="text" id="cfg-emoj-acai" maxlength="2" style="text-align:center;" oninput="atualizarNomeSecao()"></div>
-          <div style="flex:1"><label class="field-label">Nome da seção 2</label><input type="text" id="cfg-nome-acai" placeholder="Ex: Porções" oninput="atualizarNomeSecao()"></div>
-        </div>
-        <div class="form-row" style="margin-bottom:16px;">
-          <div style="flex:0 0 40px"><label class="field-label">Emoji</label><input type="text" id="cfg-emoj-bebidas" maxlength="2" style="text-align:center;" oninput="atualizarNomeSecao()"></div>
-          <div style="flex:1"><label class="field-label">Nome da seção 3</label><input type="text" id="cfg-nome-bebidas" placeholder="Ex: Bebidas" oninput="atualizarNomeSecao()"></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:12px;">
-          <div>
-            <div style="font-size:14px;font-weight:600;">Pizza Meio a Meio</div>
-            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe opção de montar pizza com 2 sabores</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+          <div style="flex:1;min-width:0;margin-right:12px;">
+            <div style="font-size:14px;font-weight:600;">🍕 Pizza Meio a Meio</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Opção de montar pizza com 2 sabores</div>
           </div>
-          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;flex-shrink:0;">
             <input type="checkbox" id="toggle-meio-a-meio" style="opacity:0;width:0;height:0;" onchange="toggleMeioAMeio(this.checked)">
-            <span id="toggle-mm-span" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
+            <span id="span-meio-a-meio" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
               <span style="position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:.3s;"></span>
             </span>
           </label>
         </div>
-        <button class="btn btn-icon-add" onclick="toggleFormBox('pizza-form-box')">➕ Adicionar</button>
+      </div>
+
+      <!-- Nomes das seções -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Nomes das seções</div>
+        <div class="form-row" style="margin-bottom:8px;">
+          <div style="flex:0 0 52px"><label class="field-label">Emoji</label><input type="text" id="cfg-emoj-pizzas" maxlength="2" style="text-align:center;" oninput="atualizarNomeSecao()"></div>
+          <div style="flex:1"><label class="field-label">Nome da seção 1</label><input type="text" id="cfg-nome-pizzas" placeholder="Ex: Hambúrgueres" oninput="atualizarNomeSecao()"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:8px;">
+          <div style="flex:0 0 52px"><label class="field-label">Emoji</label><input type="text" id="cfg-emoj-acai" maxlength="2" style="text-align:center;" oninput="atualizarNomeSecao()"></div>
+          <div style="flex:1"><label class="field-label">Nome da seção 2</label><input type="text" id="cfg-nome-acai" placeholder="Ex: Porções" oninput="atualizarNomeSecao()"></div>
+        </div>
+        <div class="form-row">
+          <div style="flex:0 0 52px"><label class="field-label">Emoji</label><input type="text" id="cfg-emoj-bebidas" maxlength="2" style="text-align:center;" oninput="atualizarNomeSecao()"></div>
+          <div style="flex:1"><label class="field-label">Nome da seção 3</label><input type="text" id="cfg-nome-bebidas" placeholder="Ex: Bebidas" oninput="atualizarNomeSecao()"></div>
+        </div>
       </div>
       <div id="pizza-form-box" class="form-box">
         <label class="field-label">Nome</label><input type="text" id="new-pizza-name" placeholder="Ex: Portuguesa">
@@ -1414,7 +1421,7 @@ function toggleAba(key, val){
 
 function toggleMeioAMeio(val){
   configs.meioAMeio = val;
-  const span = document.getElementById('toggle-mm-span');
+  const span = document.getElementById('span-toggle-meio-a-meio');
   if(span){
     span.style.background = val ? 'var(--accent)' : 'var(--surface2)';
     span.querySelector('span').style.left = val ? '23px' : '3px';
