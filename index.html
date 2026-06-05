@@ -785,10 +785,12 @@ async function carregarDoSupabase() {
 
 async function salvarNoSupabase() {
   try {
-    await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}`, {
-      method: 'PATCH',
+    await sbFetch('/rest/v1/cardapio', {
+      method: 'POST',
       prefer: 'return=minimal',
+      headers: { 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify({
+        loja_id: LOJA_ID,
         configs,
         pizzas,
         acais,
@@ -798,6 +800,7 @@ async function salvarNoSupabase() {
         updated_at: new Date().toISOString()
       })
     });
+    console.log('✅ Salvo no Supabase!');
   } catch(e) { console.warn('Erro ao salvar no Supabase:', e); }
 }
 
@@ -1174,12 +1177,12 @@ function saveAdminSettings(){
     if(v)a.price=parseFloat(v.value);if(l)a.limit=parseInt(l.value);
   });
   bebidas.forEach(b=>{const v=document.getElementById(`adm-b-${b.id}`);if(v)b.price=parseFloat(v.value);});
-            alert("✅ Configurações salvas!");
+  salvarNoSupabase();
+  alert("✅ Configurações salvas!");
   closeModal("admin-modal");renderMenu();atualizarCarrinhoBar();
 }
 function copiarPix(){navigator.clipboard.writeText(document.getElementById("pix-key-text").innerText).then(()=>alert("Chave PIX copiada!"));}
 function enviarPedido(){
-  salvarNoSupabase();
   if(localStorage.getItem('loja_fechada')==='true'){
     alert('⚠️ A loja está fechada no momento. Tente novamente mais tarde!');
     return;
