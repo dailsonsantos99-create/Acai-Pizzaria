@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Admin — Cardápio Digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0b12;
+  --surface:#131019;
+  --surface2:#1c1826;
+  --border:rgba(255,255,255,0.07);
+  --accent:#7c3aed;
+  --accent2:#6d28d9;
+  --text:#f1f0f5;
+  --muted:#6b6780;
+  --muted2:#9b96b0;
+  --green:#22c55e;
+  --red:#ef4444;
+  --radius:16px;
+  --radius-sm:10px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
+
+/* LOGIN */
+#login-screen{width:100%;max-width:400px;padding:20px}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px 36px}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.login-dot{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#c026d3);display:flex;align-items:center;justify-content:center;font-size:18px}
+.login-title{font-size:20px;font-weight:700}
+.login-sub{font-size:13px;color:var(--muted2);margin-top:2px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+.field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:.2s}
+.field input:focus{border-color:var(--accent)}
+.btn-login{width:100%;background:linear-gradient(135deg,var(--accent),#c026d3);border:none;border-radius:var(--radius-sm);padding:14px;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px;transition:.2s}
+.btn-login:hover{opacity:0.9}
+.login-error{color:var(--red);font-size:13px;text-align:center;margin-top:12px;display:none}
+
+/* PAINEL */
+#painel{display:none;min-height:100vh;width:100%;align-items:flex-start;justify-content:center;padding:40px 20px}
+.container{width:100%;max-width:760px}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:100px;padding:6px 16px 6px 6px}
+.logo-dot{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#c026d3);display:flex;align-items:center;justify-content:center;font-size:15px}
+.logo-pill span{font-size:13px;font-weight:600;color:rgba(255,255,255,0.8)}
+.btn-logout{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 16px;color:var(--muted2);font-size:13px;font-family:inherit;cursor:pointer;transition:.2s}
+.btn-logout:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:12px}
+
+/* FORM NOVO CLIENTE */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.card-title{font-size:16px;font-weight:700;margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.f-group{display:flex;flex-direction:column;gap:6px}
+.f-group label{font-size:12px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+.f-group input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:.2s}
+.f-group input:focus{border-color:var(--accent)}
+.btn-gerar{background:linear-gradient(135deg,var(--accent),#c026d3);border:none;border-radius:var(--radius-sm);padding:12px 24px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:.2s}
+.btn-gerar:hover{opacity:0.9}
+
+/* LINK GERADO */
+.link-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-top:16px;display:none}
+.link-url{font-size:13px;color:var(--accent);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-copy{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--muted2);font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap;transition:.2s}
+.btn-copy:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+.btn-copy.ok{color:var(--green);border-color:var(--green)}
+
+/* LISTA CLIENTES */
+.client-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
+.client-row:last-child{border-bottom:none}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#c026d3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.client-info{flex:1;min-width:0}
+.client-name{font-size:15px;font-weight:600}
+.client-slug{font-size:12px;color:var(--muted2);font-family:monospace;margin-top:2px}
+.badge-ativo{font-size:11px;padding:3px 10px;border-radius:100px;background:rgba(34,197,94,0.12);color:var(--green);font-weight:600;flex-shrink:0}
+.row-btns{display:flex;gap:8px}
+.btn-sm{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted2);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s}
+.btn-sm:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+.btn-sm.danger:hover{color:var(--red);border-color:var(--red)}
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 20px}
+.stat-num{font-size:28px;font-weight:700}
+.stat-label{font-size:12px;color:var(--muted2);margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-dot">🍕</div>
+      <div>
+        <div class="login-title">Cardápio Digital</div>
+        <div class="login-sub">Painel administrativo</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" id="inp-user" placeholder="Digite seu usuário" />
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="inp-pass" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter')login()" />
+    </div>
+    <button class="btn-login" onclick="login()">Entrar</button>
+    <div class="login-error" id="login-error">Usuário ou senha incorretos.</div>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="painel">
+  <div class="container">
+    <div class="header">
+      <div class="logo-pill">
+        <div class="logo-dot">🍕</div>
+        <span>Cardápio Digital</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sair</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">Clientes ativos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-hoje">0</div>
+        <div class="stat-label">Cadastrados hoje</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-mes">0</div>
+        <div class="stat-label">Neste mês</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">➕ Novo cliente</div>
+      <div class="form-grid">
+        <div class="f-group">
+          <label>Nome do cliente</label>
+          <input type="text" id="inp-nome" placeholder="Ex: Pizzaria do João" oninput="autoSlug()" />
+        </div>
+        <div class="f-group">
+          <label>ID do link</label>
+          <input type="text" id="inp-slug" placeholder="Ex: pizzaria-joao" oninput="slugManual=true" />
+        </div>
+      </div>
+      <button class="btn-gerar" onclick="gerarCliente()">Gerar link do cliente</button>
+      <div class="link-box" id="link-box">
+        <span class="link-url" id="link-url"></span>
+        <button class="btn-copy" id="btn-copy" onclick="copiar()">📋 Copiar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Clientes cadastrados</div>
+      <div id="lista"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const USER = 'Admin';
+const PASS = '190614';
+const BASE = 'https://acai-pizzaria.vercel.app';
+let slugManual = false;
+let clientes = JSON.parse(localStorage.getItem('cdg_clientes') || '[]');
+
+function login() {
+  const u = document.getElementById('inp-user').value.trim();
+  const p = document.getElementById('inp-pass').value;
+  if (u === USER && p === PASS) {
+    document.getElementById('login-screen').style.display = 'none';
+    const painel = document.getElementById('painel');
+    painel.style.display = 'flex';
+    renderLista();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function logout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('painel').style.display = 'none';
+  document.getElementById('inp-user').value = '';
+  document.getElementById('inp-pass').value = '';
+}
+
+function autoSlug() {
+  if (slugManual) return;
+  const nome = document.getElementById('inp-nome').value;
+  document.getElementById('inp-slug').value = nome
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s-]/g,'')
+    .trim().replace(/\s+/g,'-');
+}
+
+function gerarCliente() {
+  const nome = document.getElementById('inp-nome').value.trim();
+  const slug = document.getElementById('inp-slug').value.trim();
+  if (!nome || !slug) { alert('Preencha o nome e o ID do link.'); return; }
+  const url = BASE + '?loja=' + slug;
+  document.getElementById('link-url').textContent = url;
+  document.getElementById('link-box').style.display = 'flex';
+  const btn = document.getElementById('btn-copy');
+  btn.textContent = '📋 Copiar';
+  btn.className = 'btn-copy';
+  if (!clientes.find(c => c.slug === slug)) {
+    clientes.unshift({ nome, slug, url, data: new Date().toLocaleDateString('pt-BR'), ts: Date.now() });
+    salvar();
+    renderLista();
+  }
+  document.getElementById('inp-nome').value = '';
+  document.getElementById('inp-slug').value = '';
+  slugManual = false;
+}
+
+function copiar(url) {
+  const link = url || document.getElementById('link-url').textContent;
+  navigator.clipboard.writeText(link);
+  const btn = document.getElementById('btn-copy');
+  btn.textContent = '✅ Copiado!';
+  btn.className = 'btn-copy ok';
+  setTimeout(() => { btn.textContent = '📋 Copiar'; btn.className = 'btn-copy'; }, 2000);
+}
+
+function copiarCliente(url) {
+  navigator.clipboard.writeText(url);
+}
+
+function remover(slug) {
+  if (!confirm('Remover este cliente?')) return;
+  clientes = clientes.filter(c => c.slug !== slug);
+  salvar();
+  renderLista();
+}
+
+function salvar() {
+  localStorage.setItem('cdg_clientes', JSON.stringify(clientes));
+}
+
+function iniciais(nome) {
+  return nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+}
+
+function atualizarStats() {
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const mes = new Date().toLocaleDateString('pt-BR',{month:'numeric',year:'numeric'});
+  document.getElementById('stat-total').textContent = clientes.length;
+  document.getElementById('stat-hoje').textContent = clientes.filter(c=>c.data===hoje).length;
+  document.getElementById('stat-mes').textContent = clientes.filter(c=>{
+    const d = new Date(c.ts);
+    return d.toLocaleDateString('pt-BR',{month:'numeric',year:'numeric'})===mes;
+  }).length;
+}
+
+function renderLista() {
+  atualizarStats();
+  const el = document.getElementById('lista');
+  if (!clientes.length) {
+    el.innerHTML = '<div class="empty">Nenhum cliente ainda. Gere o primeiro link acima.</div>';
+    return;
+  }
+  el.innerHTML = clientes.map(c => `
+    <div class="client-row">
+      <div class="avatar">${iniciais(c.nome)}</div>
+      <div class="client-info">
+        <div class="client-name">${c.nome}</div>
+        <div class="client-slug">?loja=${c.slug} &nbsp;·&nbsp; ${c.data}</div>
+      </div>
+      <span class="badge-ativo">Ativo</span>
+      <div class="row-btns">
+        <button class="btn-sm" onclick="copiarCliente('${c.url}')">📋 Link</button>
+        <button class="btn-sm danger" onclick="remover('${c.slug}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
