@@ -535,10 +535,14 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
         <input type="text" id="config-name2" placeholder="Pizzaria">
         <label class="field-label">Descrição / Slogan (opcional)</label>
         <input type="text" id="config-desc" placeholder="Ex: Doce ou Salgado!">
-        <label class="field-label">WhatsApp da Loja (DDD + número)</label>
-        <input type="text" id="config-whatsapp" placeholder="84999999999" maxlength="11">
-        <label class="field-label">📦 WhatsApp do Logista (DDD + número)</label>
-        <input type="text" id="config-whatsapp-logista" placeholder="84999999999" maxlength="11">
+        <label class="field-label" style="display:flex;align-items:center;gap:6px;">
+          WhatsApp da Loja (DDD + número)
+          <span id="wpp-alert" style="display:none;color:#ef4444;font-size:11px;font-weight:700;">⚠️ Obrigatório!</span>
+        </label>
+        <input type="text" id="config-whatsapp" placeholder="84999999999" maxlength="11" oninput="checkWppFilled()">
+        <label class="field-label">📦 WhatsApp que recebe os pedidos (DDD + número)</label>
+        <input type="text" id="config-whatsapp-logista" placeholder="84999999999" maxlength="11" oninput="checkWppFilled()">
+        <div style="font-size:11px;color:var(--muted2);margin-top:-6px;margin-bottom:8px;">⚠️ Se vazio, usa o WhatsApp da Loja acima</div>
         <label class="field-label">Chave PIX</label>
         <input type="text" id="config-pix" placeholder="chave@pix.com">
         <label class="field-label">Taxa de Entrega (R$)</label>
@@ -1028,6 +1032,18 @@ function renderTabs(){
 
 function renderMenu(){
   renderTabs();
+  // Show warning if no WhatsApp configured
+  const numWpp = (configs.whatsappLogista || configs.whatsapp || '').replace(/\D/g,'');
+  const existingBanner = document.getElementById('wpp-warning-banner');
+  if(!numWpp || numWpp.length < 10){
+    if(!existingBanner){
+      const banner = document.createElement('div');
+      banner.id = 'wpp-warning-banner';
+      banner.style.cssText = 'background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;margin:8px 16px;font-size:13px;color:#f87171;text-align:center;';
+      banner.innerHTML = '⚠️ Configure o WhatsApp no painel admin para receber pedidos';
+      document.querySelector('.container')?.prepend(banner);
+    }
+  } else if(existingBanner){ existingBanner.remove(); }
   // Update section labels
   const secs = [{s:'pizzas',nk:'nomePizzas',ek:'emojPizzas'},{s:'acai',nk:'nomeAcai',ek:'emojAcai'},{s:'bebidas',nk:'nomeBebidas',ek:'emojBebidas'}];
   secs.forEach(({s,nk,ek})=>{
@@ -1338,6 +1354,7 @@ function accessAdmin(){
     toggleMeioAMeio(configs.meioAMeio || false);
   }
   document.getElementById("config-whatsapp").value=configs.whatsapp;
+  setTimeout(checkWppFilled, 100);
   document.getElementById("config-whatsapp-logista").value=configs.whatsappLogista||configs.whatsapp;
   document.getElementById("config-pix").value=configs.pix;
   document.getElementById("config-tax").value=configs.tax;
@@ -1401,6 +1418,13 @@ function atualizarNomeSecao(){
     if(elEmoj && emoj) elEmoj.textContent = emoj;
   });
   renderTabs();
+}
+
+function checkWppFilled(){
+  const wpp = document.getElementById('config-whatsapp')?.value || '';
+  const log = document.getElementById('config-whatsapp-logista')?.value || '';
+  const alert = document.getElementById('wpp-alert');
+  if(alert) alert.style.display = (!wpp && !log) ? 'inline' : 'none';
 }
 
 function toggleAba(key, val){
@@ -1478,6 +1502,11 @@ function enviarPedido(){
     alert('⚠️ A loja está fechada no momento. Tente novamente mais tarde!');
     return;
   }
+  const numWpp = (configs.whatsappLogista || configs.whatsapp || '').replace(/\D/g,'');
+  if(!numWpp || numWpp.length < 10){
+    alert('⚠️ O lojista ainda não configurou o número de WhatsApp. Entre em contato diretamente.');
+    return;
+  }
   const nome=document.getElementById("client-name").value;
   const phone=document.getElementById("client-phone").value.replace(/\D/g,"");
   const street=document.getElementById("client-street").value;
@@ -1494,7 +1523,7 @@ function enviarPedido(){
   const msg=`Olá! Sou ${nome} e gostaria de fazer um pedido:\n\n${itens}\n\n— Subtotal: ${fmt(sub)}\n— Taxa de entrega: ${fmt(configs.tax)}\n— TOTAL: ${fmt(total)}\n\n💳 Pagamento: ${pag}${msgTroco}${avisoPix}\n\n📍 Entregar em:\n${street}, nº ${num} — ${bairro}`;
   // Envia direto para o WhatsApp do logista (sem abrir o WhatsApp do cliente)
   const numeroDestino = "55" + (configs.whatsappLogista || configs.whatsapp).replace(/\D/g,"").replace(/^55/,"");
-  window.location.href = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
+  window.open(`https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`, '_blank');
   closeModal("checkout-modal");
   if(pag==="PIX"){document.getElementById("pix-key-text").innerText=configs.pix;document.getElementById("pix-display-box").style.display="block";}
   else document.getElementById("pix-display-box").style.display="none";
@@ -1727,7 +1756,21 @@ let listaAdicionais=${dadosAdicionais};
 /* ── PEDIDOS DO LOJISTA ── */
 let filtroPedidos = 'todos';
 
-function registrarPedido(dados){
+async function registrarPedido(dados){
+  // Salva no Supabase para o logista ver
+  try {
+    await sbFetch('/rest/v1/pedidos', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({
+        loja_id: LOJA_ID,
+        dados: dados,
+        status: 'novo'
+      })
+    });
+    console.log('✅ Pedido salvo no Supabase');
+  } catch(e) { console.warn('Erro ao salvar pedido:', e); }
+  // Mantém no localStorage como backup
   const pedidos = JSON.parse(localStorage.getItem('loja_pedidos')||'[]');
   const id = 'PED-' + Date.now();
   const hora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
