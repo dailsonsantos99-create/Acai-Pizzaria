@@ -9,23 +9,11 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0b12;
-  --surface:#131019;
-  --surface2:#1c1826;
-  --border:rgba(255,255,255,0.07);
-  --accent:#7c3aed;
-  --accent2:#6d28d9;
-  --text:#f1f0f5;
-  --muted:#6b6780;
-  --muted2:#9b96b0;
-  --green:#22c55e;
-  --red:#ef4444;
-  --radius:16px;
-  --radius-sm:10px;
+  --bg:#0d0b12;--surface:#131019;--surface2:#1c1826;--border:rgba(255,255,255,0.07);
+  --accent:#7c3aed;--accent2:#6d28d9;--text:#f1f0f5;--muted:#6b6780;--muted2:#9b96b0;
+  --green:#22c55e;--red:#ef4444;--radius:16px;--radius-sm:10px;
 }
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
-
-/* LOGIN */
 #login-screen{width:100%;max-width:400px;padding:20px}
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px 36px}
 .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
@@ -39,21 +27,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-login{width:100%;background:linear-gradient(135deg,var(--accent),#c026d3);border:none;border-radius:var(--radius-sm);padding:14px;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px;transition:.2s}
 .btn-login:hover{opacity:0.9}
 .login-error{color:var(--red);font-size:13px;text-align:center;margin-top:12px;display:none}
-
-/* PAINEL */
 #painel{display:none;min-height:100vh;width:100%;align-items:flex-start;justify-content:center;padding:40px 20px}
 .container{width:100%;max-width:760px}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
-.header-left{display:flex;align-items:center;gap:12px}
 .logo-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:100px;padding:6px 16px 6px 6px}
 .logo-dot{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#c026d3);display:flex;align-items:center;justify-content:center;font-size:15px}
 .logo-pill span{font-size:13px;font-weight:600;color:rgba(255,255,255,0.8)}
 .btn-logout{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 16px;color:var(--muted2);font-size:13px;font-family:inherit;cursor:pointer;transition:.2s}
 .btn-logout:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
-
 .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:12px}
-
-/* FORM NOVO CLIENTE */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
 .card-title{font-size:16px;font-weight:700;margin-bottom:20px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
@@ -63,15 +45,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .f-group input:focus{border-color:var(--accent)}
 .btn-gerar{background:linear-gradient(135deg,var(--accent),#c026d3);border:none;border-radius:var(--radius-sm);padding:12px 24px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:.2s}
 .btn-gerar:hover{opacity:0.9}
-
-/* LINK GERADO */
-.link-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-top:16px;display:none}
+.link-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:none;flex-direction:column;align-items:stretch;gap:10px;margin-top:16px}
 .link-url{font-size:13px;color:var(--accent);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn-copy{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--muted2);font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap;transition:.2s}
 .btn-copy:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
 .btn-copy.ok{color:var(--green);border-color:var(--green)}
-
-/* LISTA CLIENTES */
 .client-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
 .client-row:last-child{border-bottom:none}
 .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#c026d3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
@@ -88,11 +66,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 20px}
 .stat-num{font-size:28px;font-weight:700}
 .stat-label{font-size:12px;color:var(--muted2);margin-top:2px}
+.aviso{font-size:12px;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:16px;display:none}
+.aviso.warn{background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:#fbbf24}
+.aviso.err{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red)}
+.aviso.ok{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green)}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">
@@ -115,7 +96,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
-<!-- PAINEL -->
 <div id="painel">
   <div class="container">
     <div class="header">
@@ -126,19 +106,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn-logout" onclick="logout()">Sair</button>
     </div>
 
+    <div id="aviso-db" class="aviso"></div>
+
     <div class="stats">
-      <div class="stat">
-        <div class="stat-num" id="stat-total">0</div>
-        <div class="stat-label">Clientes ativos</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="stat-hoje">0</div>
-        <div class="stat-label">Cadastrados hoje</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="stat-mes">0</div>
-        <div class="stat-label">Neste mês</div>
-      </div>
+      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Clientes ativos</div></div>
+      <div class="stat"><div class="stat-num" id="stat-hoje">0</div><div class="stat-label">Cadastrados hoje</div></div>
+      <div class="stat"><div class="stat-num" id="stat-mes">0</div><div class="stat-label">Neste mês</div></div>
     </div>
 
     <div class="card">
@@ -154,7 +127,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         </div>
       </div>
       <button class="btn-gerar" onclick="gerarCliente()">Gerar link do cliente</button>
-      <div class="link-box" id="link-box" style="flex-direction:column;align-items:stretch;gap:10px;">
+      <div class="link-box" id="link-box">
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="flex:1;min-width:0;">
             <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">🔐 Link do Painel (logista)</div>
@@ -162,7 +135,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           </div>
           <button class="btn-copy" id="btn-copy" onclick="copiar()">📋 Copiar</button>
         </div>
-        <div id="link-cardapio-wrap" style="display:none;flex:1;">
+        <div id="link-cardapio-wrap" style="display:none;">
           <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);padding-top:10px;">
             <div style="flex:1;min-width:0;">
               <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">🛒 Link do Cardápio (cliente final)</div>
@@ -184,140 +157,245 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <script>
 const USER = 'Admin';
 const PASS = '190614';
-const BASE_LOGISTA = 'https://acai-pizzaria.vercel.app/logista.html';
+const BASE_LOGISTA  = 'https://acai-pizzaria.vercel.app/logista.html';
 const BASE_CARDAPIO = 'https://acai-pizzaria.vercel.app';
-const BASE = BASE_LOGISTA;
-const SUPABASE_URL = 'https://lhxanhakrrxlbjuazikk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
-let slugManual = false;
-let clientes = [];
+const SUPABASE_URL  = 'https://lhxanhakrrxlbjuazikk.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
+const LS_KEY = 'cdg_clientes_v2'; // chave separada para não conflitar com versão antiga
 
-// ── SUPABASE HELPERS ──
-async function sbFetch(path, opts={}) {
+let slugManual = false;
+let clientes   = [];
+let modoLocal  = false; // true = Supabase falhou, usando localStorage
+
+// ── SUPABASE ──
+async function sbFetch(path, opts = {}) {
   const res = await fetch(SUPABASE_URL + path, {
     ...opts,
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': opts.prefer || '',
+      'apikey':         SUPABASE_KEY,
+      'Authorization':  'Bearer ' + SUPABASE_KEY,
+      'Content-Type':   'application/json',
+      'Prefer':         opts.prefer || '',
       ...(opts.headers || {})
     }
   });
-  return res.status === 204 ? null : res.json().catch(() => null);
+  if (res.status === 204) return { ok: true, data: null };
+  const data = await res.json().catch(() => null);
+  return { ok: res.ok, status: res.status, data };
 }
 
+function mostrarAviso(msg, tipo) {
+  const el = document.getElementById('aviso-db');
+  el.textContent = msg;
+  el.className = 'aviso ' + tipo;
+  el.style.display = 'block';
+}
+function ocultarAviso() {
+  document.getElementById('aviso-db').style.display = 'none';
+}
+
+// ── CARREGAR ──
 async function carregarClientes() {
   try {
-    const data = await sbFetch('/rest/v1/admin_clientes?order=created_at.desc');
-    if(data && Array.isArray(data)) {
+    const { ok, status, data } = await sbFetch('/rest/v1/admin_clientes?order=created_at.desc');
+
+    // RLS bloqueando ou tabela não existe
+    if (!ok) {
+      console.warn('Supabase retornou erro', status, data);
+      usarLocalStorage();
+      return;
+    }
+
+    if (Array.isArray(data) && data.length === 0) {
+      // Tabela existe mas está vazia — verifica se há dados no localStorage para migrar
+      await migrarLocalStorage();
+      return;
+    }
+
+    if (Array.isArray(data) && data.length > 0) {
       clientes = data.map(c => ({
         nome: c.nome,
         slug: c.slug,
-        url: BASE_LOGISTA + '?loja=' + c.slug,
+        url:         BASE_LOGISTA  + '?loja=' + c.slug,
         urlCardapio: BASE_CARDAPIO + '?loja=' + c.slug,
         data: new Date(c.created_at).toLocaleDateString('pt-BR'),
-        ts: new Date(c.created_at).getTime()
+        ts:   new Date(c.created_at).getTime()
       }));
+      ocultarAviso();
       renderLista();
+      return;
     }
-  } catch(e) { console.warn('Erro ao carregar clientes:', e); }
-}
 
-async function salvarClienteSupabase(nome, slug) {
-  try {
-    await sbFetch('/rest/v1/admin_clientes', {
-      method: 'POST',
-      prefer: 'return=minimal',
-      body: JSON.stringify({ nome, slug, created_at: new Date().toISOString() })
-    });
-  } catch(e) { console.warn('Erro ao salvar cliente:', e); }
-}
-
-async function removerClienteSupabase(slug) {
-  try {
-    await sbFetch(`/rest/v1/admin_clientes?slug=eq.${slug}`, {
-      method: 'DELETE',
-      prefer: 'return=minimal'
-    });
-  } catch(e) { console.warn('Erro ao remover cliente:', e); }
-}
-
-async function login() {
-  const u = document.getElementById('inp-user').value.trim();
-  const p = document.getElementById('inp-pass').value;
-  if (u === USER && p === PASS) {
-    sessionStorage.setItem('admin_logado', '1');
-    document.getElementById('login-screen').style.display = 'none';
-    const painel = document.getElementById('painel');
-    painel.style.display = 'flex';
-    await carregarClientes();
-    await migrarLocalStorage(); // migra clientes antigos do localStorage
-  } else {
-    document.getElementById('login-error').style.display = 'block';
+    usarLocalStorage();
+  } catch (e) {
+    console.warn('Erro de rede ao carregar do Supabase:', e);
+    usarLocalStorage();
   }
 }
 
-// Migra clientes antigos do localStorage para o Supabase
+// ── FALLBACK LOCAL ──
+function usarLocalStorage() {
+  modoLocal = true;
+  mostrarAviso('⚠️ Banco de dados indisponível — dados salvos localmente neste navegador.', 'warn');
+  const raw = localStorage.getItem(LS_KEY);
+  clientes = raw ? JSON.parse(raw) : [];
+  renderLista();
+}
+
+function salvarLocalStorage() {
+  localStorage.setItem(LS_KEY, JSON.stringify(clientes));
+}
+
+// ── MIGRAÇÃO localStorage → Supabase ──
 async function migrarLocalStorage() {
-  const antigos = JSON.parse(localStorage.getItem('cdg_clientes') || '[]');
-  if (!antigos.length) return;
-  for (const c of antigos) {
+  // Tenta migrar chave antiga
+  const antigas = [
+    ...JSON.parse(localStorage.getItem('cdg_clientes') || '[]'),
+    ...JSON.parse(localStorage.getItem(LS_KEY) || '[]')
+  ];
+
+  if (!antigas.length) { renderLista(); return; }
+
+  mostrarAviso('⏳ Migrando clientes antigos para o banco...', 'warn');
+
+  for (const c of antigas) {
     const jaExiste = clientes.find(x => x.slug === c.slug);
     if (!jaExiste) {
       await salvarClienteSupabase(c.nome, c.slug);
     }
   }
-  if (antigos.length > 0) {
-    localStorage.removeItem('cdg_clientes');
+
+  localStorage.removeItem('cdg_clientes');
+  localStorage.removeItem(LS_KEY);
+  await carregarClientes();
+  mostrarAviso('✅ Clientes migrados com sucesso!', 'ok');
+  setTimeout(ocultarAviso, 3000);
+}
+
+// ── SALVAR / REMOVER SUPABASE ──
+async function salvarClienteSupabase(nome, slug) {
+  const { ok, status, data } = await sbFetch('/rest/v1/admin_clientes', {
+    method: 'POST',
+    prefer: 'return=minimal',
+    body: JSON.stringify({ nome, slug, created_at: new Date().toISOString() })
+  });
+  if (!ok) {
+    console.warn('Erro ao salvar no Supabase:', status, data);
+    // Se for erro de RLS (403) ou permissão, avisa
+    if (status === 403 || status === 401) {
+      mostrarAviso('⚠️ Supabase bloqueou a inserção (RLS). Ative "Disable RLS" na tabela admin_clientes ou crie política de INSERT.', 'err');
+    }
+    return false;
+  }
+  return true;
+}
+
+async function removerClienteSupabase(slug) {
+  const { ok } = await sbFetch(`/rest/v1/admin_clientes?slug=eq.${slug}`, {
+    method: 'DELETE',
+    prefer: 'return=minimal'
+  });
+  return ok;
+}
+
+// ── LOGIN / LOGOUT ──
+async function login() {
+  const u = document.getElementById('inp-user').value.trim();
+  const p = document.getElementById('inp-pass').value;
+  if (u === USER && p === PASS) {
+    localStorage.setItem('admin_logado', '1'); // localStorage persiste F5
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('painel').style.display = 'flex';
     await carregarClientes();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
   }
 }
 
 function logout() {
-  sessionStorage.removeItem('admin_logado');
+  localStorage.removeItem('admin_logado');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('painel').style.display = 'none';
   document.getElementById('inp-user').value = '';
   document.getElementById('inp-pass').value = '';
 }
 
+// ── GERAR CLIENTE ──
 function autoSlug() {
   if (slugManual) return;
   const nome = document.getElementById('inp-nome').value;
   document.getElementById('inp-slug').value = nome
     .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-z0-9\s-]/g,'')
-    .trim().replace(/\s+/g,'-');
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim().replace(/\s+/g, '-');
 }
 
 async function gerarCliente() {
   const nome = document.getElementById('inp-nome').value.trim();
   const slug = document.getElementById('inp-slug').value.trim();
   if (!nome || !slug) { alert('Preencha o nome e o ID do link.'); return; }
+
+  if (clientes.find(c => c.slug === slug)) {
+    alert('Já existe um cliente com este ID de link.'); return;
+  }
+
   const urlLogista  = BASE_LOGISTA  + '?loja=' + slug;
   const urlCardapio = BASE_CARDAPIO + '?loja=' + slug;
-  document.getElementById('link-url').textContent = urlLogista;
+
+  document.getElementById('link-url').textContent      = urlLogista;
   document.getElementById('link-cardapio').textContent = urlCardapio;
-  document.getElementById('link-cardapio-wrap').style.display = 'flex';
+  document.getElementById('link-cardapio-wrap').style.display = 'block';
   document.getElementById('link-box').style.display = 'flex';
-  const btn = document.getElementById('btn-copy');
-  btn.textContent = '📋 Copiar';
-  btn.className = 'btn-copy';
-  if (!clientes.find(c => c.slug === slug)) {
-    await salvarClienteSupabase(nome, slug);
-    clientes.unshift({ nome, slug, url: urlLogista, urlCardapio, data: new Date().toLocaleDateString('pt-BR'), ts: Date.now() });
-    renderLista();
-    atualizarStats();
+  document.getElementById('btn-copy').textContent  = '📋 Copiar';
+  document.getElementById('btn-copy').className    = 'btn-copy';
+
+  const novoCliente = {
+    nome, slug,
+    url:         urlLogista,
+    urlCardapio: urlCardapio,
+    data: new Date().toLocaleDateString('pt-BR'),
+    ts:   Date.now()
+  };
+
+  if (modoLocal) {
+    // Modo offline: só localStorage
+    clientes.unshift(novoCliente);
+    salvarLocalStorage();
+  } else {
+    const salvou = await salvarClienteSupabase(nome, slug);
+    if (salvou) {
+      clientes.unshift(novoCliente);
+    } else {
+      // Supabase falhou na hora de salvar — salva local como fallback
+      modoLocal = true;
+      clientes.unshift(novoCliente);
+      salvarLocalStorage();
+    }
   }
+
+  renderLista();
   document.getElementById('inp-nome').value = '';
   document.getElementById('inp-slug').value = '';
   slugManual = false;
 }
 
-function copiar(url) {
-  const link = url || document.getElementById('link-url').textContent;
+// ── REMOVER ──
+async function remover(slug) {
+  if (!confirm('Remover este cliente?')) return;
+  if (modoLocal) {
+    clientes = clientes.filter(c => c.slug !== slug);
+    salvarLocalStorage();
+  } else {
+    await removerClienteSupabase(slug);
+    clientes = clientes.filter(c => c.slug !== slug);
+  }
+  renderLista();
+}
+
+// ── COPIAR ──
+function copiar() {
+  const link = document.getElementById('link-url').textContent;
   navigator.clipboard.writeText(link);
   const btn = document.getElementById('btn-copy');
   btn.textContent = '✅ Copiado!';
@@ -325,44 +403,28 @@ function copiar(url) {
   setTimeout(() => { btn.textContent = '📋 Copiar'; btn.className = 'btn-copy'; }, 2000);
 }
 
+function copiarCardapio() {
+  const link = document.getElementById('link-cardapio').textContent;
+  navigator.clipboard.writeText(link);
+}
+
 function copiarCliente(url) {
   navigator.clipboard.writeText(url);
 }
 
-function copiarMostrar(url, btnId) {
-  navigator.clipboard.writeText(url);
-  const btn = document.getElementById(btnId);
-  if(btn) {
-    const orig = btn.textContent;
-    btn.textContent = '✅ Copiado!';
-    btn.style.color = 'var(--green)';
-    btn.style.borderColor = 'var(--green)';
-    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
-  }
-}
-
-async function remover(slug) {
-  if (!confirm('Remover este cliente?')) return;
-  await removerClienteSupabase(slug);
-  clientes = clientes.filter(c => c.slug !== slug);
-  renderLista();
-  atualizarStats();
-}
-
-// salvar() replaced by Supabase
-
+// ── RENDER ──
 function iniciais(nome) {
-  return nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+  return nome.split(' ').slice(0,2).map(p => p[0]).join('').toUpperCase();
 }
 
 function atualizarStats() {
   const hoje = new Date().toLocaleDateString('pt-BR');
-  const mes = new Date().toLocaleDateString('pt-BR',{month:'numeric',year:'numeric'});
+  const mes  = new Date().toLocaleDateString('pt-BR', { month:'numeric', year:'numeric' });
   document.getElementById('stat-total').textContent = clientes.length;
-  document.getElementById('stat-hoje').textContent = clientes.filter(c=>c.data===hoje).length;
-  document.getElementById('stat-mes').textContent = clientes.filter(c=>{
+  document.getElementById('stat-hoje').textContent  = clientes.filter(c => c.data === hoje).length;
+  document.getElementById('stat-mes').textContent   = clientes.filter(c => {
     const d = new Date(c.ts);
-    return d.toLocaleDateString('pt-BR',{month:'numeric',year:'numeric'})===mes;
+    return d.toLocaleDateString('pt-BR', { month:'numeric', year:'numeric' }) === mes;
   }).length;
 }
 
@@ -388,9 +450,10 @@ function renderLista() {
     </div>
   `).join('');
 }
-// Verifica se já está logado ao carregar
+
+// ── INIT ──
 window.addEventListener('DOMContentLoaded', async () => {
-  if (sessionStorage.getItem('admin_logado') === '1') {
+  if (localStorage.getItem('admin_logado') === '1') {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('painel').style.display = 'flex';
     await carregarClientes();
