@@ -293,15 +293,12 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
 </div>
 
 <!-- TABS -->
-<div class="tabs">
-  <div class="tab-pill active" onclick="irParaSecao('.pizzas-section', this)">🍕 Pizzas</div>
-  <div class="tab-pill" onclick="irParaSecao('.acai-section', this)">🍧 Açaí</div>
-  <div class="tab-pill" onclick="irParaSecao('.bebidas-section', this)">🥤 Bebidas</div>
-</div>
+<div class="tabs" id="tabs-container"></div>
 
 <div class="container" style="padding-top:8px;">
 
   <!-- MEIO A MEIO -->
+  <div id="wrap-pizzas">
   <div class="section-head pizzas-section">
     <span class="section-label"><span>🍕</span> Pizzas</span>
   </div>
@@ -324,20 +321,25 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
   </div>
 
   <div id="pizzas-list"></div>
+  </div><!-- /wrap-pizzas -->
 
   <!-- AÇAÍ -->
+  <div id="wrap-acai">
   <div class="section-head acai-section" style="margin-top:32px;">
     <span class="section-label"><span>🍧</span> Açaí Premium</span>
     <span class="section-count" id="acai-count"></span>
   </div>
   <div id="acais-grid" class="acai-grid"></div>
+  </div><!-- /wrap-acai -->
 
   <!-- BEBIDAS -->
+  <div id="wrap-bebidas">
   <div class="section-head bebidas-section" style="margin-top:32px;">
     <span class="section-label"><span>🥤</span> Bebidas</span>
     <span class="section-count" id="bebida-count"></span>
   </div>
   <div id="bebidas-list"></div>
+  </div><!-- /wrap-bebidas -->
 
 </div>
 
@@ -551,6 +553,44 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
     <div class="admin-section">
       <div class="admin-section-head">
         <div class="admin-section-title">🍕 Pizzas</div>
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Seções visíveis</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:14px;font-weight:600;">🍕 Aba Pizzas</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de pizzas no cardápio</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" id="toggle-abaPizzas" style="opacity:0;width:0;height:0;" onchange="toggleAba('abaPizzas',this.checked)">
+            <span id="span-abaPizzas" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
+              <span style="position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:.3s;"></span>
+            </span>
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:14px;font-weight:600;">🍧 Aba Açaí</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de açaís no cardápio</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" id="toggle-abaAcai" style="opacity:0;width:0;height:0;" onchange="toggleAba('abaAcai',this.checked)">
+            <span id="span-abaAcai" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
+              <span style="position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:.3s;"></span>
+            </span>
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:14px;font-weight:600;">🥤 Aba Bebidas</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe a seção de bebidas no cardápio</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" id="toggle-abaBebidas" style="opacity:0;width:0;height:0;" onchange="toggleAba('abaBebidas',this.checked)">
+            <span id="span-abaBebidas" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
+              <span style="position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:.3s;"></span>
+            </span>
+          </label>
+        </div>
+        <div style="margin-bottom:12px;"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:12px;">
           <div>
             <div style="font-size:14px;font-weight:600;">Pizza Meio a Meio</div>
@@ -852,7 +892,7 @@ async function salvarNoSupabase() {
 }
 
 /* ── DEFAULTS ── */
-const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:"",meioAMeio:false};
+const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:"",meioAMeio:false,abaPizzas:true,abaAcai:true,abaBebidas:true};
 const defaultPizzas=[];
 const defaultAcais=[];
 const defaultBebidas=[];
@@ -878,7 +918,28 @@ function irParaSecao(cls,el){
 /* ── RENDER ── */
 function fmt(n){return'R$ '+parseFloat(n).toFixed(2).replace('.',',');}
 
+function renderTabs(){
+  const tabsContainer = document.getElementById('tabs-container');
+  if(!tabsContainer) return;
+  const abas = [
+    {key:'abaPizzas', label:'🍕 Pizzas', cls:'.pizzas-section', wrap:'wrap-pizzas'},
+    {key:'abaAcai',   label:'🍧 Açaí',   cls:'.acai-section',   wrap:'wrap-acai'},
+    {key:'abaBebidas',label:'🥤 Bebidas', cls:'.bebidas-section', wrap:'wrap-bebidas'},
+  ];
+  // Show/hide sections
+  abas.forEach(a => {
+    const w = document.getElementById(a.wrap);
+    if(w) w.style.display = configs[a.key] !== false ? 'block' : 'none';
+  });
+  // Render tabs
+  const ativas = abas.filter(a => configs[a.key] !== false);
+  tabsContainer.innerHTML = ativas.map((a,i) =>
+    `<div class="tab-pill${i===0?' active':''}" onclick="irParaSecao('${a.cls}',this)">${a.label}</div>`
+  ).join('');
+}
+
 function renderMenu(){
+  renderTabs();
   // Meio a Meio card
   const mmCard = document.getElementById('meio-a-meio-card');
   if(mmCard) mmCard.style.display = configs.meioAMeio ? 'block' : 'none';
@@ -1158,6 +1219,12 @@ function accessAdmin(){
   document.getElementById("config-name1").value=configs.name||"Açaí+";
   document.getElementById("config-name2").value=configs.nameSecondary||"Pizzaria";
   document.getElementById("config-desc").value=configs.desc||"";
+  // Set section toggles
+  ['abaPizzas','abaAcai','abaBebidas'].forEach(key => {
+    const t = document.getElementById('toggle-' + key);
+    const val = configs[key] !== false;
+    if(t){ t.checked = val; toggleAba(key, val); }
+  });
   // Set meio a meio toggle
   const mmToggle = document.getElementById('toggle-meio-a-meio');
   if(mmToggle) {
@@ -1211,6 +1278,18 @@ function adicionarBebidaAdmin(){
     ["new-bebida-name","new-bebida-desc","new-bebida-price"].forEach(id=>document.getElementById(id).value="");
   toggleFormBox("bebida-form-box");renderAdminBebidas();renderMenu();
 }
+function toggleAba(key, val){
+  configs[key] = val;
+  const span = document.getElementById('span-' + key);
+  if(span){
+    span.style.background = val ? 'var(--accent)' : 'var(--surface2)';
+    span.querySelector('span').style.left = val ? '23px' : '3px';
+    span.querySelector('span').style.background = val ? '#fff' : 'var(--muted)';
+  }
+  renderTabs();
+  salvarNoSupabase();
+}
+
 function toggleMeioAMeio(val){
   configs.meioAMeio = val;
   const span = document.getElementById('toggle-mm-span');
