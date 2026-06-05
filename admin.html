@@ -170,7 +170,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <script>
 const USER = 'Admin';
 const PASS = '190614';
-const BASE = 'https://acai-pizzaria.vercel.app';
+const BASE_LOGISTA = 'https://acai-pizzaria.vercel.app/logista.html';
+const BASE_CARDAPIO = 'https://acai-pizzaria.vercel.app';
+const BASE = BASE_LOGISTA; // compatibilidade
 let slugManual = false;
 let clientes = JSON.parse(localStorage.getItem('cdg_clientes') || '[]');
 
@@ -208,8 +210,9 @@ function gerarCliente() {
   const nome = document.getElementById('inp-nome').value.trim();
   const slug = document.getElementById('inp-slug').value.trim();
   if (!nome || !slug) { alert('Preencha o nome e o ID do link.'); return; }
-  const url = BASE + '?loja=' + slug;
-  document.getElementById('link-url').textContent = url;
+  const urlLogista  = BASE_LOGISTA  + '?loja=' + slug;
+  const urlCardapio = BASE_CARDAPIO + '?loja=' + slug;
+  document.getElementById('link-url').textContent = urlLogista;
   document.getElementById('link-cardapio').textContent = urlCardapio;
   document.getElementById('link-cardapio-wrap').style.display = 'flex';
   document.getElementById('link-box').style.display = 'flex';
@@ -217,7 +220,7 @@ function gerarCliente() {
   btn.textContent = '📋 Copiar';
   btn.className = 'btn-copy';
   if (!clientes.find(c => c.slug === slug)) {
-    clientes.unshift({ nome, slug, url, data: new Date().toLocaleDateString('pt-BR'), ts: Date.now() });
+    clientes.unshift({ nome, slug, url: urlLogista, urlCardapio, data: new Date().toLocaleDateString('pt-BR'), ts: Date.now() });
     salvar();
     renderLista();
   }
