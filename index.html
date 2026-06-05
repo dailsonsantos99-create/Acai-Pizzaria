@@ -722,8 +722,14 @@ function imgWithFallback(src, fallback, cls='') {
 const SUPABASE_URL = 'https://lhxanhakrrxlbjuazikk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
 
-// Gera ou recupera um ID único para esta loja
+// Lê o ID da loja da URL (?loja=joao123) ou gera um aleatório se não informado
 function getLojId() {
+  const params = new URLSearchParams(window.location.search);
+  const idUrl = params.get('loja');
+  if (idUrl) {
+    localStorage.setItem('loja_id', idUrl);
+    return idUrl;
+  }
   let id = localStorage.getItem('loja_id');
   if (!id) {
     id = 'loja_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
