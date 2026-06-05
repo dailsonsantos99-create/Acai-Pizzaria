@@ -186,18 +186,71 @@ const USER = 'Admin';
 const PASS = '190614';
 const BASE_LOGISTA = 'https://acai-pizzaria.vercel.app/logista.html';
 const BASE_CARDAPIO = 'https://acai-pizzaria.vercel.app';
-const BASE = BASE_LOGISTA; // compatibilidade
+const BASE = BASE_LOGISTA;
+const SUPABASE_URL = 'https://lhxanhakrrxlbjuazikk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
 let slugManual = false;
-let clientes = JSON.parse(localStorage.getItem('cdg_clientes') || '[]');
+let clientes = [];
 
-function login() {
+// ── SUPABASE HELPERS ──
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || '',
+      ...(opts.headers || {})
+    }
+  });
+  return res.status === 204 ? null : res.json().catch(() => null);
+}
+
+async function carregarClientes() {
+  try {
+    const data = await sbFetch('/rest/v1/admin_clientes?order=created_at.desc');
+    if(data && Array.isArray(data)) {
+      clientes = data.map(c => ({
+        nome: c.nome,
+        slug: c.slug,
+        url: BASE_LOGISTA + '?loja=' + c.slug,
+        urlCardapio: BASE_CARDAPIO + '?loja=' + c.slug,
+        data: new Date(c.created_at).toLocaleDateString('pt-BR'),
+        ts: new Date(c.created_at).getTime()
+      }));
+      renderLista();
+    }
+  } catch(e) { console.warn('Erro ao carregar clientes:', e); }
+}
+
+async function salvarClienteSupabase(nome, slug) {
+  try {
+    await sbFetch('/rest/v1/admin_clientes', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ nome, slug, created_at: new Date().toISOString() })
+    });
+  } catch(e) { console.warn('Erro ao salvar cliente:', e); }
+}
+
+async function removerClienteSupabase(slug) {
+  try {
+    await sbFetch(`/rest/v1/admin_clientes?slug=eq.${slug}`, {
+      method: 'DELETE',
+      prefer: 'return=minimal'
+    });
+  } catch(e) { console.warn('Erro ao remover cliente:', e); }
+}
+
+async function login() {
   const u = document.getElementById('inp-user').value.trim();
   const p = document.getElementById('inp-pass').value;
   if (u === USER && p === PASS) {
     document.getElementById('login-screen').style.display = 'none';
     const painel = document.getElementById('painel');
     painel.style.display = 'flex';
-    renderLista();
+    await carregarClientes();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -220,7 +273,7 @@ function autoSlug() {
     .trim().replace(/\s+/g,'-');
 }
 
-function gerarCliente() {
+async function gerarCliente() {
   const nome = document.getElementById('inp-nome').value.trim();
   const slug = document.getElementById('inp-slug').value.trim();
   if (!nome || !slug) { alert('Preencha o nome e o ID do link.'); return; }
@@ -234,9 +287,10 @@ function gerarCliente() {
   btn.textContent = '📋 Copiar';
   btn.className = 'btn-copy';
   if (!clientes.find(c => c.slug === slug)) {
+    await salvarClienteSupabase(nome, slug);
     clientes.unshift({ nome, slug, url: urlLogista, urlCardapio, data: new Date().toLocaleDateString('pt-BR'), ts: Date.now() });
-    salvar();
     renderLista();
+    atualizarStats();
   }
   document.getElementById('inp-nome').value = '';
   document.getElementById('inp-slug').value = '';
@@ -268,16 +322,15 @@ function copiarMostrar(url, btnId) {
   }
 }
 
-function remover(slug) {
+async function remover(slug) {
   if (!confirm('Remover este cliente?')) return;
+  await removerClienteSupabase(slug);
   clientes = clientes.filter(c => c.slug !== slug);
-  salvar();
   renderLista();
+  atualizarStats();
 }
 
-function salvar() {
-  localStorage.setItem('cdg_clientes', JSON.stringify(clientes));
-}
+// salvar() replaced by Supabase
 
 function iniciais(nome) {
   return nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
