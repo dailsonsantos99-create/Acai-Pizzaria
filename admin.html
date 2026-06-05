@@ -247,16 +247,35 @@ async function login() {
   const u = document.getElementById('inp-user').value.trim();
   const p = document.getElementById('inp-pass').value;
   if (u === USER && p === PASS) {
+    sessionStorage.setItem('admin_logado', '1');
     document.getElementById('login-screen').style.display = 'none';
     const painel = document.getElementById('painel');
     painel.style.display = 'flex';
     await carregarClientes();
+    await migrarLocalStorage(); // migra clientes antigos do localStorage
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
 }
 
+// Migra clientes antigos do localStorage para o Supabase
+async function migrarLocalStorage() {
+  const antigos = JSON.parse(localStorage.getItem('cdg_clientes') || '[]');
+  if (!antigos.length) return;
+  for (const c of antigos) {
+    const jaExiste = clientes.find(x => x.slug === c.slug);
+    if (!jaExiste) {
+      await salvarClienteSupabase(c.nome, c.slug);
+    }
+  }
+  if (antigos.length > 0) {
+    localStorage.removeItem('cdg_clientes');
+    await carregarClientes();
+  }
+}
+
 function logout() {
+  sessionStorage.removeItem('admin_logado');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('painel').style.display = 'none';
   document.getElementById('inp-user').value = '';
@@ -369,6 +388,14 @@ function renderLista() {
     </div>
   `).join('');
 }
+// Verifica se já está logado ao carregar
+window.addEventListener('DOMContentLoaded', async () => {
+  if (sessionStorage.getItem('admin_logado') === '1') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('painel').style.display = 'flex';
+    await carregarClientes();
+  }
+});
 </script>
 </body>
 </html>
