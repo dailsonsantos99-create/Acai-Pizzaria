@@ -907,25 +907,10 @@ function imgWithFallback(src, fallback, cls='') {
 
 
 /* ── SUPABASE CONFIG ── */
-const SUPABASE_URL = 'https://lhxanhakrrxlbjuazikk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
+// (removed duplicate)
+// (removed duplicate)
 
-// Lê o ID da loja da URL (?loja=joao123) ou gera um aleatório se não informado
-function getLojId() {
-  const params = new URLSearchParams(window.location.search);
-  const idUrl = params.get('loja');
-  if (idUrl) {
-    localStorage.setItem('loja_id', idUrl);
-    return idUrl;
-  }
-  let id = localStorage.getItem('loja_id');
-  if (!id) {
-    id = 'loja_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
-    localStorage.setItem('loja_id', id);
-  }
-  return id;
-}
-const LOJA_ID = getLojId();
+// LOJA_ID handled by logista
 
 async function sbFetch(path, opts={}) {
   const res = await fetch(SUPABASE_URL + path, {
@@ -942,37 +927,7 @@ async function sbFetch(path, opts={}) {
   return res.status === 204 ? null : res.json().catch(() => null);
 }
 
-async function carregarDoSupabase() {
-  try {
-    const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=*`);
-    if (data && data.length > 0) {
-      const row = data[0];
-      configs          = row.configs         || defaultConfigs;
-      pizzas           = row.pizzas          || [];
-      acais            = row.acais           || [];
-      bebidas          = row.bebidas         || [];
-      listaAdicionais  = row.adicionais      || [];
-      if (row.loja_fechada) localStorage.setItem('loja_fechada','true');
-      else localStorage.removeItem('loja_fechada');
-    } else {
-      // primeira vez — cria registro no banco
-      await sbFetch('/rest/v1/cardapio', {
-        method: 'POST',
-        prefer: 'return=minimal',
-        body: JSON.stringify({
-          loja_id: LOJA_ID,
-          configs: defaultConfigs,
-          pizzas: [], acais: [], bebidas: [], adicionais: [], loja_fechada: false
-        })
-      });
-    }
-  } catch(e) { console.warn('Offline — usando localStorage', e); }
-  renderMenu();
-  aplicarMarca();
-  // Esconde loading screen
-  const ls = document.getElementById('loading-screen');
-  if(ls){ ls.classList.add('hide'); setTimeout(()=>ls.remove(), 500); }
-}
+// (removed duplicate function)
 
 async function salvarNoSupabase() {
   try {
@@ -1008,7 +963,7 @@ let acais  =defaultAcais;
 let bebidas=defaultBebidas;
 let listaAdicionais=defaultAdicionais;
 // Carrega do Supabase ao iniciar (substitui os valores acima se encontrar no banco)
-document.addEventListener('DOMContentLoaded', () => carregarDoSupabase());
+// DOMContentLoaded handled by logista
 
 let carrinho=[],acaiEm=null,adcSel=[],pizzaEm=null,bordaNome="Sem Borda",bordaPreco=0;
 
