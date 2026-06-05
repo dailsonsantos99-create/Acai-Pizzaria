@@ -1782,20 +1782,21 @@ async function carregarPedidosSupabase(){
   try {
     const data = await sbFetch(`/rest/v1/pedidos?loja_id=eq.${LOJA_ID}&order=created_at.desc&limit=100`);
     if(data && data.length > 0){
-      // Convert Supabase pedidos to local format
       const pedidos = data.map(p => ({
         id: p.id,
         ...p.dados,
         status: p.status,
-        ts: new Date(p.created_at).getTime(),
-        supabase_id: p.id
+        ts: new Date(p.created_at).getTime()
       }));
+      // Verifica se há novos pedidos (som de notificação)
+      const local = getPedidos();
+      const localIds = new Set(local.map(p => p.id));
+      const novosChegando = pedidos.filter(p => !localIds.has(p.id) && p.status === 'novo');
+      if(novosChegando.length > 0) tocarSom();
+
       localStorage.setItem('loja_pedidos', JSON.stringify(pedidos));
       renderPedidos();
-      // Update badge
-      const novos = pedidos.filter(p => p.status === 'novo').length;
-      const badge = document.getElementById('badge-novos');
-      if(badge){ badge.style.display = novos > 0 ? 'inline-flex' : 'none'; badge.textContent = novos; }
+      atualizarBadgePedidos();
     }
   } catch(e){ console.warn('Erro ao carregar pedidos:', e); }
 }
@@ -1869,7 +1870,7 @@ function renderPedidos(){
   }).join('');
 }
 
-function mudarStatus(id, novoStatus){
+async function mudarStatus(id, novoStatus){
   const pedidos = getPedidos();
   const idx = pedidos.findIndex(p=>p.id===id);
   if(idx<0) return;
@@ -1877,7 +1878,20 @@ function mudarStatus(id, novoStatus){
   salvarPedidos(pedidos);
   renderPedidos();
   atualizarBadgePedidos();
-  // Após confirmar, oferece copiar mensagem automaticamente
+
+  // Atualiza no Supabase usando o id do pedido (uuid)
+  try {
+    await sbFetch(`/rest/v1/pedidos?id=eq.${id}`, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ status: novoStatus })
+    });
+    console.log('✅ Status atualizado no Supabase:', novoStatus);
+  } catch(e) {
+    console.warn('Erro ao atualizar status:', e);
+  }
+
+  // Após confirmar, copia mensagem para WhatsApp
   if(novoStatus === 'confirmado' || novoStatus === 'entregue'){
     copiarMsgCliente(id, novoStatus);
   }
