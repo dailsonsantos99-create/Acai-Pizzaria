@@ -481,10 +481,10 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
         <input type="text" id="config-name2" placeholder="Pizzaria">
         <label class="field-label">Descrição / Slogan (opcional)</label>
         <input type="text" id="config-desc" placeholder="Ex: Doce ou Salgado!">
-        <label class="field-label">WhatsApp da Loja (somente números)</label>
-        <input type="text" id="config-whatsapp" placeholder="5511999999999">
-        <label class="field-label">📦 WhatsApp do Logista (recebe os pedidos)</label>
-        <input type="text" id="config-whatsapp-logista" placeholder="5511999999999">
+        <label class="field-label">WhatsApp da Loja (DDD + número)</label>
+        <input type="text" id="config-whatsapp" placeholder="84999999999" maxlength="11">
+        <label class="field-label">📦 WhatsApp do Logista (DDD + número)</label>
+        <input type="text" id="config-whatsapp-logista" placeholder="84999999999" maxlength="11">
         <label class="field-label">Chave PIX</label>
         <input type="text" id="config-pix" placeholder="chave@pix.com">
         <label class="field-label">Taxa de Entrega (R$)</label>
@@ -1210,7 +1210,7 @@ function enviarPedido(){
   const avisoPix=pag==="PIX"?"\n\n⚠️ Pedido confirmado após envio do comprovante PIX.":"";
   const msg=`Olá! Sou ${nome} e gostaria de fazer um pedido:\n\n${itens}\n\n— Subtotal: ${fmt(sub)}\n— Taxa de entrega: ${fmt(configs.tax)}\n— TOTAL: ${fmt(total)}\n\n💳 Pagamento: ${pag}${msgTroco}${avisoPix}\n\n📍 Entregar em:\n${street}, nº ${num} — ${bairro}`;
   // Envia direto para o WhatsApp do logista (sem abrir o WhatsApp do cliente)
-  const numeroDestino = (configs.whatsappLogista || configs.whatsapp).replace(/\D/g,"");
+  const numeroDestino = "55" + (configs.whatsappLogista || configs.whatsapp).replace(/\D/g,"").replace(/^55/,"");
   window.location.href = `https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`;
   closeModal("checkout-modal");
   if(pag==="PIX"){document.getElementById("pix-key-text").innerText=configs.pix;document.getElementById("pix-display-box").style.display="block";}
