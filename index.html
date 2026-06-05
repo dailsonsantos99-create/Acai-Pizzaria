@@ -306,14 +306,14 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
     <span class="section-label"><span>🍕</span> Pizzas</span>
   </div>
 
-  <div class="hero-card" style="margin-bottom:16px;">
+  <div id="meio-a-meio-card" class="hero-card" style="margin-bottom:16px;display:none;">
     <div class="hero-card-inner">
       <div class="hero-img-wrap">
-        <img src="https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=200&q=80" onerror="this.src=SVG_FB_PIZZA" alt="Pizza Meio a Meio">
+        <img id="meio-a-meio-img" src="https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=200&q=80" onerror="this.src=SVG_FB_PIZZA" alt="Pizza Meio a Meio">
       </div>
       <div class="hero-body">
         <div class="hero-badge">✨ Novidade</div>
-        <div class="hero-title">Pizza Meio a Meio</div>
+        <div class="hero-title" id="meio-a-meio-titulo">Pizza Meio a Meio</div>
         <div class="hero-sub">2 sabores no mesmo disco · M ou G</div>
         <div class="hero-footer">
           <span class="price" style="font-size:12px;color:var(--muted2);">Preço pelo maior</span>
@@ -551,6 +551,18 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
     <div class="admin-section">
       <div class="admin-section-head">
         <div class="admin-section-title">🍕 Pizzas</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:600;">Pizza Meio a Meio</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Exibe opção de montar pizza com 2 sabores</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" id="toggle-meio-a-meio" style="opacity:0;width:0;height:0;" onchange="toggleMeioAMeio(this.checked)">
+            <span id="toggle-mm-span" style="position:absolute;inset:0;background:var(--surface2);border-radius:100px;transition:.3s;border:1px solid var(--border2);">
+              <span style="position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--muted);border-radius:50%;transition:.3s;"></span>
+            </span>
+          </label>
+        </div>
         <button class="btn btn-icon-add" onclick="toggleFormBox('pizza-form-box')">➕ Adicionar</button>
       </div>
       <div id="pizza-form-box" class="form-box">
@@ -840,7 +852,7 @@ async function salvarNoSupabase() {
 }
 
 /* ── DEFAULTS ── */
-const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:""};
+const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:"",meioAMeio:false};
 const defaultPizzas=[];
 const defaultAcais=[];
 const defaultBebidas=[];
@@ -867,6 +879,9 @@ function irParaSecao(cls,el){
 function fmt(n){return'R$ '+parseFloat(n).toFixed(2).replace('.',',');}
 
 function renderMenu(){
+  // Meio a Meio card
+  const mmCard = document.getElementById('meio-a-meio-card');
+  if(mmCard) mmCard.style.display = configs.meioAMeio ? 'block' : 'none';
   document.getElementById("shop-desc").innerText=configs.desc||"";
   document.getElementById("header-name1").textContent=configs.name||"Açaí+";
   document.getElementById("header-name2").textContent=configs.nameSecondary||"Pizzaria";
@@ -1143,6 +1158,12 @@ function accessAdmin(){
   document.getElementById("config-name1").value=configs.name||"Açaí+";
   document.getElementById("config-name2").value=configs.nameSecondary||"Pizzaria";
   document.getElementById("config-desc").value=configs.desc||"";
+  // Set meio a meio toggle
+  const mmToggle = document.getElementById('toggle-meio-a-meio');
+  if(mmToggle) {
+    mmToggle.checked = configs.meioAMeio || false;
+    toggleMeioAMeio(configs.meioAMeio || false);
+  }
   document.getElementById("config-whatsapp").value=configs.whatsapp;
   document.getElementById("config-whatsapp-logista").value=configs.whatsappLogista||configs.whatsapp;
   document.getElementById("config-pix").value=configs.pix;
@@ -1189,6 +1210,17 @@ function adicionarBebidaAdmin(){
   bebidas.push({id:"b_"+Date.now(),name:n,price:p,desc:d||""});
     ["new-bebida-name","new-bebida-desc","new-bebida-price"].forEach(id=>document.getElementById(id).value="");
   toggleFormBox("bebida-form-box");renderAdminBebidas();renderMenu();
+}
+function toggleMeioAMeio(val){
+  configs.meioAMeio = val;
+  const span = document.getElementById('toggle-mm-span');
+  if(span){
+    span.style.background = val ? 'var(--accent)' : 'var(--surface2)';
+    span.querySelector('span').style.left = val ? '23px' : '3px';
+    span.querySelector('span').style.background = val ? '#fff' : 'var(--muted)';
+  }
+  renderMenu();
+  salvarNoSupabase();
 }
 function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>p.id!==id);renderAdminPizzas();renderMenu();salvarNoSupabase();}}
 function deletarAcai(id){if(confirm("Remover açaí?")){acais=acais.filter(a=>a.id!==id);renderAdminAcais();renderMenu();salvarNoSupabase();}}
