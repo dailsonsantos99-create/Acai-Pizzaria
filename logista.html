@@ -2011,7 +2011,8 @@ function toggleLoja(){
 function openAdminModal() {
   const el = document.getElementById('admin-loja-nome');
   if(el) el.textContent = configs.name || 'Configurando...';
-  document.getElementById("config-name").value = configs.name || '';
+  const nameEl = document.getElementById("config-name") || document.getElementById("config-name1");
+  if(nameEl) nameEl.value = configs.name || '';
   document.getElementById("config-name2").value = configs.nameSecondary || '';
   document.getElementById("config-desc").value = configs.desc || '';
   document.getElementById("config-whatsapp").value = configs.whatsapp || '';
@@ -2049,7 +2050,9 @@ function openAdminModal() {
 function saveAdminSettings() {
   // Lê campos com segurança (podem não existir na página do logista)
   const g = id => document.getElementById(id);
-  if(g("config-name"))           configs.name            = g("config-name").value.trim() || configs.name || 'Minha Loja';
+  // Nome pode ser config-name ou config-name1
+  const nameEl = g("config-name") || g("config-name1");
+  if(nameEl) configs.name = nameEl.value.trim() || configs.name || 'Minha Loja';
   if(g("config-name2"))          configs.nameSecondary   = g("config-name2").value.trim();
   if(g("config-desc"))           configs.desc            = g("config-desc").value.trim();
   if(g("config-whatsapp"))       configs.whatsapp        = g("config-whatsapp").value.replace(/\D/g,'');
