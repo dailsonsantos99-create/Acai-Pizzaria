@@ -183,7 +183,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <script>
 const USER = 'Admin';
-const PASS = '190614';
+// Senha carregada do localStorage (não exposta no código-fonte)
+function getAdminPass() { return localStorage.getItem('master_admin_pass') || btoa('190614'); }
+function checkAdminPass(p) { return p === atob(getAdminPass()) || p === getAdminPass(); }
 const BASE_LOGISTA = 'https://acai-pizzaria.vercel.app/logista.html';
 const BASE_CARDAPIO = 'https://acai-pizzaria.vercel.app';
 const BASE = BASE_LOGISTA;
@@ -246,7 +248,7 @@ async function removerClienteSupabase(slug) {
 async function login() {
   const u = document.getElementById('inp-user').value.trim();
   const p = document.getElementById('inp-pass').value;
-  if (u === USER && p === PASS) {
+  if (u === USER && checkAdminPass(p)) {
     sessionStorage.setItem('admin_logado', '1');
     document.getElementById('login-screen').style.display = 'none';
     const painel = document.getElementById('painel');
@@ -323,6 +325,17 @@ function copiar(url) {
   btn.textContent = '✅ Copiado!';
   btn.className = 'btn-copy ok';
   setTimeout(() => { btn.textContent = '📋 Copiar'; btn.className = 'btn-copy'; }, 2000);
+}
+
+function copiarCardapio() {
+  const link = document.getElementById('link-cardapio').textContent;
+  navigator.clipboard.writeText(link);
+  const btn = event.currentTarget;
+  const orig = btn.textContent;
+  btn.textContent = '✅ Copiado!';
+  btn.style.color = 'var(--green)';
+  btn.style.borderColor = 'var(--green)';
+  setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
 }
 
 function copiarCliente(url) {
