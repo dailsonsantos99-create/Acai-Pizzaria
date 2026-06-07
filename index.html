@@ -943,25 +943,44 @@ async function carregarDoSupabase() {
   esconderLoading();
 }
 
-async function salvarNoSupabase() {
+async function salvarNoSupabase(tentativa = 1) {
+  const payload = {
+    loja_id: LOJA_ID,
+    configs, pizzas, acais, bebidas,
+    adicionais: listaAdicionais,
+    loja_fechada: lojaFechada,
+    updated_at: new Date().toISOString()
+  };
   try {
-    await sbFetch('/rest/v1/cardapio', {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/cardapio', {
       method: 'POST',
-      prefer: 'return=minimal',
-      headers: { 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({
-        loja_id: LOJA_ID,
-        configs,
-        pizzas,
-        acais,
-        bebidas,
-        adicionais: listaAdicionais,
-        loja_fechada: lojaFechada,
-        updated_at: new Date().toISOString()
-      })
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(payload)
     });
+    if (!res.ok && res.status !== 204) {
+      const err = await res.json().catch(() => ({}));
+      if ((err.code === '57014' || res.status === 500) && tentativa < 3) {
+        console.warn(`⏳ Timeout Supabase, tentativa ${tentativa}/3...`);
+        await new Promise(r => setTimeout(r, 1000 * tentativa));
+        return salvarNoSupabase(tentativa + 1);
+      }
+      throw new Error(`Supabase ${res.status}: ${err.message || JSON.stringify(err)}`);
+    }
     console.log('✅ Salvo no Supabase!');
-  } catch(e) { console.warn('Erro ao salvar no Supabase:', e); }
+  } catch(e) {
+    console.warn('Erro ao salvar no Supabase:', e);
+    if (tentativa < 3) {
+      await new Promise(r => setTimeout(r, 1000 * tentativa));
+      return salvarNoSupabase(tentativa + 1);
+    }
+    mostrarToast('❌ Erro ao salvar. Verifique sua conexão.');
+    throw e;
+  }
 }
 
 /* ── DEFAULTS ── */
