@@ -999,13 +999,13 @@ function irParaSecao(cls,el){
 /* ── RENDER ── */
 function fmt(n){return'R$ '+parseFloat(n).toFixed(2).replace('.',',');}
 
-function atualizarBadgePizza(id, badge){
+async function atualizarBadgePizza(id, badge){
   pizzas = pizzas.map(p => p.id===id ? {...p, badge} : p);
-  renderAdminPizzas(); renderMenu(); salvarNoSupabase();
+  renderAdminPizzas(); renderMenu(); await salvarNoSupabase();
 }
-function atualizarBadgeBebida(id, badge){
+async function atualizarBadgeBebida(id, badge){
   bebidas = bebidas.map(b => b.id===id ? {...b, badge} : b);
-  renderAdminBebidas(); renderMenu(); salvarNoSupabase();
+  renderAdminBebidas(); renderMenu(); await salvarNoSupabase();
 }
 function renderBadge(badge){
   if(!badge) return '';
@@ -1273,7 +1273,7 @@ async function trocarImgPizza(id){
   inp.onchange=async()=>{
     const b64=await fileToB64(inp.files[0]);
     pizzas=pizzas.map(p=>p.id===id?{...p,img:b64}:p);
-    renderAdminPizzas(); renderMenu(); salvarNoSupabase();
+    renderAdminPizzas(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
   inp.click();
 }
@@ -1282,7 +1282,7 @@ async function trocarImgAcai(id){
   inp.onchange=async()=>{
     const b64=await fileToB64(inp.files[0]);
     acais=acais.map(a=>a.id===id?{...a,img:b64}:a);
-    renderAdminAcais(); renderMenu(); salvarNoSupabase();
+    renderAdminAcais(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
   inp.click();
 }
@@ -1291,7 +1291,7 @@ async function trocarImgBebida(id){
   inp.onchange=async()=>{
     const b64=await fileToB64(inp.files[0]);
     bebidas=bebidas.map(b=>b.id===id?{...b,img:b64}:b);
-    renderAdminBebidas(); renderMenu(); salvarNoSupabase();
+    renderAdminBebidas(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
   inp.click();
 }
@@ -1411,7 +1411,7 @@ function accessAdmin(){
   atualizarBadgePedidos();
 }
 
-function adicionarPizza(){
+async function adicionarPizza(){
   const n=document.getElementById("new-pizza-name").value.trim();
   const d=document.getElementById("new-pizza-desc").value.trim();
   const m=parseFloat(document.getElementById("new-pizza-priceM").value);
@@ -1422,8 +1422,10 @@ function adicionarPizza(){
     ["new-pizza-name","new-pizza-desc","new-pizza-priceM","new-pizza-priceG"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("new-pizza-badge").value="";
   toggleFormBox("pizza-form-box");renderAdminPizzas();renderMenu();
+  await salvarNoSupabase();
+  mostrarToast('✅ Pizza salva!');
 }
-function adicionarAcai(){
+async function adicionarAcai(){
   const n=document.getElementById("new-acai-name").value.trim();
   const p=parseFloat(document.getElementById("new-acai-price").value);
   const l=parseInt(document.getElementById("new-acai-limit").value)||5;
@@ -1431,8 +1433,10 @@ function adicionarAcai(){
   acais.push({id:"a_"+Date.now(),name:n,price:p,limit:l});
     ["new-acai-name","new-acai-price"].forEach(id=>document.getElementById(id).value="");
   toggleFormBox("acai-form-box");renderAdminAcais();renderMenu();
+  await salvarNoSupabase();
+  mostrarToast('✅ Açaí salvo!');
 }
-function adicionarBebidaAdmin(){
+async function adicionarBebidaAdmin(){
   const n=document.getElementById("new-bebida-name").value.trim();
   const d=document.getElementById("new-bebida-desc").value.trim();
   const p=parseFloat(document.getElementById("new-bebida-price").value);
@@ -1442,6 +1446,8 @@ function adicionarBebidaAdmin(){
     ["new-bebida-name","new-bebida-desc","new-bebida-price"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("new-bebida-badge").value="";
   toggleFormBox("bebida-form-box");renderAdminBebidas();renderMenu();
+  await salvarNoSupabase();
+  mostrarToast('✅ Bebida salva!');
 }
 function atualizarNomeSecao(){
   const secoes = ['pizzas','acai','bebidas'];
@@ -1474,10 +1480,10 @@ function toggleAba(key, val){
     span.querySelector('span').style.background = val ? '#fff' : 'var(--muted)';
   }
   renderTabs();
-  salvarNoSupabase();
+  await salvarNoSupabase();
 }
 
-function toggleMeioAMeio(val){
+async function toggleMeioAMeio(val){
   configs.meioAMeio = val;
   const span = document.getElementById('span-meio-a-meio');
   if(span){
@@ -1486,13 +1492,13 @@ function toggleMeioAMeio(val){
     span.querySelector('span').style.background = val ? '#fff' : 'var(--muted)';
   }
   renderMenu();
-  salvarNoSupabase();
+  await salvarNoSupabase();
 }
-function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>p.id!==id);renderAdminPizzas();renderMenu();salvarNoSupabase();}}
-function deletarAcai(id){if(confirm("Remover açaí?")){acais=acais.filter(a=>a.id!==id);renderAdminAcais();renderMenu();salvarNoSupabase();}}
-function deletarBebida(id){if(confirm("Remover bebida?")){bebidas=bebidas.filter(b=>b.id!==id);renderAdminBebidas();renderMenu();salvarNoSupabase();}}
+async function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>p.id!==id);renderAdminPizzas();renderMenu();await salvarNoSupabase();mostrarToast('🗑 Pizza removida.');}}
+async function deletarAcai(id){if(confirm("Remover açaí?")){acais=acais.filter(a=>a.id!==id);renderAdminAcais();renderMenu();await salvarNoSupabase();mostrarToast('🗑 Açaí removido.');}}
+async function deletarBebida(id){if(confirm("Remover bebida?")){bebidas=bebidas.filter(b=>b.id!==id);renderAdminBebidas();renderMenu();await salvarNoSupabase();mostrarToast('🗑 Bebida removida.');}}
 
-function saveAdminSettings(){
+async function saveAdminSettings(){
   configs.name=document.getElementById("config-name1").value.trim()||"Açaí+";
   configs.nameSecondary=document.getElementById("config-name2").value.trim()||"Pizzaria";
   configs.desc=document.getElementById("config-desc").value.trim();
@@ -1516,8 +1522,8 @@ function saveAdminSettings(){
     if(v)a.price=parseFloat(v.value);if(l)a.limit=parseInt(l.value);
   });
   bebidas.forEach(b=>{const v=document.getElementById(`adm-b-${b.id}`);if(v)b.price=parseFloat(v.value);});
-  salvarNoSupabase();
-  alert("✅ Configurações salvas!");
+  await salvarNoSupabase();
+  mostrarToast('✅ Configurações salvas no banco!');
   closeModal("admin-modal");renderMenu();atualizarCarrinhoBar();
 }
 function copiarPix(){navigator.clipboard.writeText(document.getElementById("pix-key-text").innerText).then(()=>alert("Chave PIX copiada!"));}
@@ -1611,14 +1617,15 @@ function trocarBanner(){
     const b64=await fileToB64(inp.files[0]);
     configs.banner=b64;
     atualizarBanner();
-    salvarNoSupabase();
+    await salvarNoSupabase();
+    mostrarToast('✅ Capa salva!');
   };
   inp.click();
 }
-function removerBanner(){
+async async function removerBanner(){
   configs.banner="";
   atualizarBanner();
-  salvarNoSupabase();
+  await salvarNoSupabase();
 }
 function atualizarBanner(){
   const img=document.getElementById('banner-img');
@@ -1696,8 +1703,8 @@ function aplicarCores(p,s){
 function salvarAparencia(){
   configs.colorPrimary=document.getElementById('color-primary').value;
   configs.colorSecondary=document.getElementById('color-secondary').value;
-  salvarNoSupabase();
-    alert('✅ Aparência salva!');
+  await salvarNoSupabase();
+  mostrarToast('✅ Aparência salva!');
 }
 
 /* ── SENHA ── */
@@ -1722,7 +1729,7 @@ function alterarSenha(){
   if(nova.length<4){alert('❌ A nova senha precisa ter pelo menos 4 caracteres!');return;}
   if(nova!==confirma){alert('❌ As senhas não coincidem!');return;}
   configs.adminSenha=nova;
-  salvarNoSupabase();
+  await salvarNoSupabase();
   document.getElementById('senha-atual').value='';
   document.getElementById('senha-nova').value='';
   document.getElementById('senha-confirma').value='';
@@ -2050,7 +2057,7 @@ function atualizarStatusLoja(){
 function toggleLoja(){
   const novoStatus = !lojaFechada;
   lojaFechada = novoStatus;
-  salvarNoSupabase();
+  await salvarNoSupabase();
   atualizarStatusLoja();
   if(novoStatus){
     alert('🔒 Loja fechada! Os clientes não conseguirão finalizar pedidos.');
