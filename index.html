@@ -1489,7 +1489,7 @@ function toggleAba(key, val){
 
 function toggleMeioAMeio(val){
   configs.meioAMeio = val;
-  const span = document.getElementById('span-toggle-meio-a-meio');
+  const span = document.getElementById('span-meio-a-meio');
   if(span){
     span.style.background = val ? 'var(--accent)' : 'var(--surface2)';
     span.querySelector('span').style.left = val ? '23px' : '3px';
@@ -1532,9 +1532,9 @@ function saveAdminSettings(){
 }
 function copiarPix(){navigator.clipboard.writeText(document.getElementById("pix-key-text").innerText).then(()=>alert("Chave PIX copiada!"));}
 function mostrarConfirmacao(){
-  const total = carrinho.reduce((s,i)=>s+i.price*i.qty,0);
+  const total = carrinho.reduce((s,i)=>s+i.price,0);
   const items = carrinho.map(i =>
-    `<div class="confirm-item"><span>${i.qty}x ${i.name}</span><span>${fmt(i.price*i.qty)}</span></div>`
+    `<div class="confirm-item"><span>1x ${i.name}</span><span>${fmt(i.price)}</span></div>`
   ).join('');
   document.getElementById('confirm-items').innerHTML =
     items + `<div class="confirm-item"><span>Total</span><span>${fmt(total)}</span></div>`;
@@ -1706,6 +1706,7 @@ function aplicarCores(p,s){
 function salvarAparencia(){
   configs.colorPrimary=document.getElementById('color-primary').value;
   configs.colorSecondary=document.getElementById('color-secondary').value;
+  salvarNoSupabase();
     alert('✅ Aparência salva!');
 }
 
@@ -1785,10 +1786,14 @@ let pizzas=${dadosPizzas};
 let acais=${dadosAcais};
 let bebidas=${dadosBebidas};
 let listaAdicionais=${dadosAdicionais};
-// Dados carregados pelo Supabase
-(function(){
-  }
-})();`;
+// Dados carregados diretamente (sem Supabase)
+document.addEventListener('DOMContentLoaded', () => {
+  renderMenu();
+  aplicarMarca();
+  aplicarCores(configs.colorPrimary||'#9333ea', configs.colorSecondary||'#c026d3');
+  const ls = document.getElementById('loading-screen');
+  if(ls){ ls.classList.add('hide'); setTimeout(()=>ls.remove(), 500); }
+});`;
 
   src = src.replace(initOld, initNew);
 
@@ -2022,7 +2027,8 @@ function atualizarStatusLoja(){
 function toggleLoja(){
   const fechada = localStorage.getItem('loja_fechada') === 'true';
   const novoStatus = !fechada;
-  localStorage.setItem('loja_fechada', novoStatus);
+  if(novoStatus) localStorage.setItem('loja_fechada', 'true');
+  else localStorage.removeItem('loja_fechada');
   salvarNoSupabase();
   atualizarStatusLoja();
   if(novoStatus){
