@@ -723,6 +723,7 @@ async function sbFetch(path, opts={}) {
 }
 
 async function carregarDoSupabase() {
+  if(!LOJA_ID) return;
   try {
     const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=*`);
     if(data && data.length > 0) {
@@ -927,33 +928,12 @@ function imgWithFallback(src, fallback, cls='') {
 
 
 /* ── SUPABASE CONFIG ── */
-// (função sbFetch definida acima)
+// (função sbFetch e salvarNoSupabase definidas acima)
 
 // LOJA_ID handled by logista
 
-async function salvarNoSupabase() {
-  try {
-    await sbFetch('/rest/v1/cardapio', {
-      method: 'POST',
-      prefer: 'return=minimal',
-      headers: { 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({
-        loja_id: LOJA_ID,
-        configs,
-        pizzas,
-        acais,
-        bebidas,
-        adicionais: listaAdicionais,
-        loja_fechada: lojaFechada,
-        updated_at: new Date().toISOString()
-      })
-    });
-    console.log('✅ Salvo no Supabase!');
-  } catch(e) { console.warn('Erro ao salvar no Supabase:', e); }
-}
-
 /* ── DEFAULTS ── */
-const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:"",meioAMeio:false,abaPizzas:true,abaAcai:true,abaBebidas:true,nomePizzas:"Pizzas",nomeAcai:"Açaí Premium",nomeBebidas:"Bebidas",emojPizzas:"🍕",emojAcai:"🍧",emojBebidas:"🥤"};
+const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:"",meioAMeio:false,abaPizzas:true,abaAcai:true,abaBebidas:true,nomePizzas:"Pizzas",nomeAcai:"Açaí Premium",nomeBebidas:"Bebidas",emojPizzas:"🍕",emojAcai:"🍧",emojBebidas:"🥤",adminSenha:"1234"};
 const defaultPizzas=[];
 const defaultAcais=[];
 const defaultBebidas=[];
@@ -1457,7 +1437,7 @@ function checkWppFilled(){
   if(alert) alert.style.display = (!wpp && !log) ? 'inline' : 'none';
 }
 
-function toggleAba(key, val){
+async function toggleAba(key, val){
   configs[key] = val;
   const span = document.getElementById('span-' + key);
   if(span){
@@ -1469,7 +1449,7 @@ function toggleAba(key, val){
   await salvarNoSupabase();
 }
 
-function toggleMeioAMeio(val){
+async function toggleMeioAMeio(val){
   configs.meioAMeio = val;
   const span = document.getElementById('span-meio-a-meio');
   if(span){
@@ -1495,7 +1475,6 @@ function openAdminModal(){
   if(g("config-whatsapp-logista")) g("config-whatsapp-logista").value = configs.whatsappLogista || '';
   if(g("config-pix"))   g("config-pix").value   = configs.pix || '';
   if(g("config-tax"))   g("config-tax").value   = configs.tax ?? 5;
-  if(g("config-senha-atual")) g("config-senha-atual").value = configs.adminSenha || '1234';
   if(g("color-primary")) g("color-primary").value = configs.colorPrimary || '#9333ea';
   if(g("color-secondary")) g("color-secondary").value = configs.colorSecondary || '#c026d3';
   // Toggles de seções
@@ -1586,7 +1565,7 @@ function novoPedido(){
   fecharConfirmacao();
   closeModal('checkout-modal');
 }
-function enviarPedido(){
+async function enviarPedido(){
   if(lojaFechada){
     alert('⚠️ A loja está fechada no momento. Tente novamente mais tarde!');
     return;
@@ -1618,7 +1597,7 @@ function enviarPedido(){
   else document.getElementById("pix-display-box").style.display="none";
   document.getElementById("success-modal").style.display="flex";
   // Registra pedido no histórico do lojista
-  registrarPedido({
+  await registrarPedido({
     nome, phone, street, num, bairro, pag,
     troco: pag==="Dinheiro"&&troco ? troco : null,
     itens: carrinho.map(i=>({name:i.name,custom:i.custom,price:i.price})),
@@ -1650,7 +1629,7 @@ function showAdminPage(pageId, btn){
 }
 
 /* ── LOGO ── */
-function trocarBanner(){
+async function trocarBanner(){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
   inp.onchange=async()=>{
     const b64=await fileToB64(inp.files[0]);
@@ -1696,10 +1675,11 @@ function trocarLogo(){
   };
   inp.click();
 }
-function removerLogo(){
+async function removerLogo(){
   configs.logo="";
-    aplicarMarca();
+  aplicarMarca();
   atualizarLogoPreview();
+  await salvarNoSupabase();
 }
 function atualizarLogoPreview(){
   const img=document.getElementById('logo-preview-img');
@@ -1739,7 +1719,7 @@ function aplicarCores(p,s){
   document.documentElement.style.setProperty('--brand-primary',p);
   document.documentElement.style.setProperty('--brand-secondary',s);
 }
-function salvarAparencia(){
+async function salvarAparencia(){
   configs.colorPrimary=document.getElementById('color-primary').value;
   configs.colorSecondary=document.getElementById('color-secondary').value;
   await salvarNoSupabase();
@@ -1759,7 +1739,7 @@ function checkSenha(){
   bar.style.background=colors[score-1]||'#ef4444';
   bar.style.width=widths[score-1]||'25%';
 }
-function alterarSenha(){
+async function alterarSenha(){
   const senhaCorreta=configs.adminSenha||'1234';
   const atual=document.getElementById('senha-atual').value;
   const nova=document.getElementById('senha-nova').value;
@@ -2113,7 +2093,7 @@ function atualizarStatusLoja(){
   }
 }
 
-function toggleLoja(){
+async function toggleLoja(){
   lojaFechada = !lojaFechada;
   await salvarNoSupabase();
   atualizarStatusLoja();
