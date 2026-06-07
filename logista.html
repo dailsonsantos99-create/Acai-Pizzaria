@@ -1495,6 +1495,54 @@ function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>
 function deletarAcai(id){if(confirm("Remover açaí?")){acais=acais.filter(a=>a.id!==id);renderAdminAcais();renderMenu();salvarNoSupabase();}}
 function deletarBebida(id){if(confirm("Remover bebida?")){bebidas=bebidas.filter(b=>b.id!==id);renderAdminBebidas();renderMenu();salvarNoSupabase();}}
 
+function openAdminModal(){
+  const el = document.getElementById('admin-loja-nome');
+  if(el) el.textContent = configs.name || 'Configurando...';
+  const g = id => document.getElementById(id);
+  if(g("config-name1")) g("config-name1").value = configs.name || '';
+  if(g("config-name2")) g("config-name2").value = configs.nameSecondary || '';
+  if(g("config-desc"))  g("config-desc").value  = configs.desc || '';
+  if(g("config-whatsapp")) g("config-whatsapp").value = configs.whatsapp || '';
+  if(g("config-whatsapp-logista")) g("config-whatsapp-logista").value = configs.whatsappLogista || '';
+  if(g("config-pix"))   g("config-pix").value   = configs.pix || '';
+  if(g("config-tax"))   g("config-tax").value   = configs.tax ?? 5;
+  if(g("config-senha-atual")) g("config-senha-atual").value = configs.adminSenha || '1234';
+  if(g("color-primary")) g("color-primary").value = configs.colorPrimary || '#9333ea';
+  if(g("color-secondary")) g("color-secondary").value = configs.colorSecondary || '#c026d3';
+  // Toggles de seções
+  ['abaPizzas','abaAcai','abaBebidas'].forEach(key => {
+    const t = g('toggle-' + key);
+    const val = configs[key] !== false;
+    if(t){ t.checked = val; toggleAba(key, val); }
+  });
+  // Nomes das seções
+  [['pizzas','nomePizzas','emojPizzas'],['acai','nomeAcai','emojAcai'],['bebidas','nomeBebidas','emojBebidas']].forEach(([s,nk,ek])=>{
+    const fn=g('cfg-nome-'+s); if(fn) fn.value=configs[nk]||'';
+    const fe=g('cfg-emoj-'+s); if(fe) fe.value=configs[ek]||'';
+  });
+  // Meio a meio
+  const mm = g('toggle-meio-a-meio');
+  if(mm){ mm.checked = configs.meioAMeio || false; toggleMeioAMeio(configs.meioAMeio || false); }
+  // Toggle loja fechada
+  const lf = localStorage.getItem('loja_fechada') === 'true';
+  const tb = g('btn-toggle-loja');
+  if(tb) tb.textContent = lf ? '🔓 Abrir Loja' : '🔒 Fechar Loja';
+  // Adicionais por categoria
+  const cats = {adicionais:'cfg-cat-adicionais',coberturas:'cfg-cat-coberturas',coberturasEspeciais:'cfg-cat-coberturasEspeciais',cremes:'cfg-cat-cremes',frutas:'cfg-cat-frutas'};
+  const adc = listaAdicionais && typeof listaAdicionais === 'object' && !Array.isArray(listaAdicionais) ? listaAdicionais : {adicionais: Array.isArray(listaAdicionais) ? listaAdicionais : []};
+  Object.entries(cats).forEach(([key, elId]) => {
+    const el2 = g(elId);
+    if(el2) el2.value = (adc[key] || []).join(', ');
+  });
+  setTimeout(checkWppFilled, 100);
+  aplicarMarca();
+  atualizarBanner();
+  atualizarLogoPreview();
+  renderAdminPizzas();
+  renderAdminAcais();
+  renderAdminBebidas();
+}
+
 function saveAdminSettings(){
   configs.name=document.getElementById("config-name1").value.trim()||"Açaí+";
   configs.nameSecondary=document.getElementById("config-name2").value.trim()||"Pizzaria";
@@ -1519,8 +1567,13 @@ function saveAdminSettings(){
   });
   bebidas.forEach(b=>{const v=document.getElementById(`adm-b-${b.id}`);if(v)b.price=parseFloat(v.value);});
   salvarNoSupabase();
+  // Atualiza header do logista
+  const nomeEl = document.getElementById('painel-nome-loja');
+  if(nomeEl) nomeEl.textContent = configs.name;
+  aplicarMarca();
+  atualizarBanner();
   alert("✅ Configurações salvas!");
-  closeModal("admin-modal");renderMenu();atualizarCarrinhoBar();
+  renderMenu();
 }
 function copiarPix(){navigator.clipboard.writeText(document.getElementById("pix-key-text").innerText).then(()=>alert("Chave PIX copiada!"));}
 function mostrarConfirmacao(){
@@ -2058,78 +2111,9 @@ function toggleLoja(){
 }
 
 
-// Override openAdminModal para não tentar abrir modal
-function openAdminModal() {
-  const el = document.getElementById('admin-loja-nome');
-  if(el) el.textContent = configs.name || 'Configurando...';
-  const nameEl = document.getElementById("config-name") || document.getElementById("config-name1");
-  if(nameEl) nameEl.value = configs.name || '';
-  document.getElementById("config-name2").value = configs.nameSecondary || '';
-  document.getElementById("config-desc").value = configs.desc || '';
-  document.getElementById("config-whatsapp").value = configs.whatsapp || '';
-  document.getElementById("config-whatsapp-logista").value = configs.whatsappLogista || '';
-  document.getElementById("config-pix").value = configs.pix || '';
-  document.getElementById("config-tax").value = configs.tax ?? 5;
-  setTimeout(checkWppFilled, 100);
-  const lf = localStorage.getItem('loja_fechada') === 'true';
-  const tb = document.getElementById('btn-toggle-loja');
-  if(tb) tb.textContent = lf ? '🔓 Abrir Loja' : '🔒 Fechar Loja';
-  ['abaPizzas','abaAcai','abaBebidas'].forEach(key => {
-    const t = document.getElementById('toggle-' + key);
-    const val = configs[key] !== false;
-    if(t) { t.checked = val; toggleAba(key, val); }
-  });
-  [['pizzas','nomePizzas','emojPizzas'],['acai','nomeAcai','emojAcai'],['bebidas','nomeBebidas','emojBebidas']].forEach(([s,nk,ek])=>{
-    const fn=document.getElementById('cfg-nome-'+s); if(fn) fn.value=configs[nk]||'';
-    const fe=document.getElementById('cfg-emoj-'+s); if(fe) fe.value=configs[ek]||'';
-  });
-  const mmToggle = document.getElementById('toggle-meio-a-meio');
-  if(mmToggle) { mmToggle.checked = configs.meioAMeio || false; toggleMeioAMeio(configs.meioAMeio || false); }
-  if(configs.colorPrimary) {
-    document.getElementById('color-primary').value = configs.colorPrimary;
-    document.getElementById('color-secondary').value = configs.colorSecondary || '#c026d3';
-  }
-  const senhaInput = document.getElementById('config-senha-atual');
-  if(senhaInput) senhaInput.value = configs.adminSenha || '1234';
-  aplicarMarca();
-  renderAdminPizzas();
-  renderAdminAcais();
-  renderAdminBebidas();
-}
+// openAdminModal é definida acima com leitura completa dos campos
 
-// Override saveAdminSettings para salvar no Supabase e atualizar header
-function saveAdminSettings() {
-  // Lê campos com segurança (podem não existir na página do logista)
-  const g = id => document.getElementById(id);
-  // Nome pode ser config-name ou config-name1
-  const nameEl = g("config-name") || g("config-name1");
-  if(nameEl) configs.name = nameEl.value.trim() || configs.name || 'Minha Loja';
-  if(g("config-name2"))          configs.nameSecondary   = g("config-name2").value.trim();
-  if(g("config-desc"))           configs.desc            = g("config-desc").value.trim();
-  if(g("config-whatsapp"))       configs.whatsapp        = g("config-whatsapp").value.replace(/\D/g,'');
-  if(g("config-whatsapp-logista")) configs.whatsappLogista = g("config-whatsapp-logista").value.replace(/\D/g,'');
-  if(g("config-pix"))            configs.pix             = g("config-pix").value.trim();
-  if(g("config-tax"))            configs.tax             = parseFloat(g("config-tax").value) || 5;
-  if(g("config-senha-atual") && g("config-senha-atual").value) configs.adminSenha = g("config-senha-atual").value;
-  if(g("color-primary"))         configs.colorPrimary    = g("color-primary").value;
-  if(g("color-secondary"))       configs.colorSecondary  = g("color-secondary").value;
-  if(g("config-tax-entrega"))    configs.tax             = parseFloat(g("config-tax-entrega").value) || configs.tax || 5;
-  
-  salvarNoSupabase();
-  
-  const nomeEl = document.getElementById('painel-nome-loja');
-  if(nomeEl) nomeEl.textContent = configs.name;
-  
-  if(localStorage.getItem('loja_fechada')==='true'){
-    const tb = document.getElementById('btn-toggle-loja');
-    if(tb) tb.textContent='🔓 Abrir Loja';
-  }
-  
-  alert('✅ Configurações salvas!');
-  renderMenu();
-  aplicarMarca();
-  atualizarBanner();
-}
+// saveAdminSettings é definida acima (linha ~1498) com leitura completa dos campos
 
 
 </script>
