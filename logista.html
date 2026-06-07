@@ -416,8 +416,28 @@ body{ padding-bottom:0; min-height:100vh; display:flex; flex-direction:column; }
 
       <div class="admin-section" style="border:none;">
         <div class="admin-section-title" style="margin-bottom:12px;">🍧 Adicionais do Açaí</div>
-        <label class="field-label">Separados por vírgula</label>
-        <textarea id="config-adicionais" style="height:75px;font-size:12px;"></textarea>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div>
+            <label class="field-label">🍫 Adicionais (separados por vírgula)</label>
+            <textarea id="cfg-cat-adicionais" style="height:55px;font-size:12px;" placeholder="Ex: Granola, Paçoca, Castanha"></textarea>
+          </div>
+          <div>
+            <label class="field-label">🍯 Coberturas (separadas por vírgula)</label>
+            <textarea id="cfg-cat-coberturas" style="height:55px;font-size:12px;" placeholder="Ex: Mel, Leite condensado, Nutella"></textarea>
+          </div>
+          <div>
+            <label class="field-label">🌟 Coberturas Especiais (separadas por vírgula)</label>
+            <textarea id="cfg-cat-coberturasEspeciais" style="height:55px;font-size:12px;" placeholder="Ex: Ovomaltine, Ninho, Creme de Avelã"></textarea>
+          </div>
+          <div>
+            <label class="field-label">🍦 Cremes (separados por vírgula)</label>
+            <textarea id="cfg-cat-cremes" style="height:55px;font-size:12px;" placeholder="Ex: Creme de leite, Chantilly, Tapioca"></textarea>
+          </div>
+          <div>
+            <label class="field-label">🍓 Frutas (separadas por vírgula)</label>
+            <textarea id="cfg-cat-frutas" style="height:55px;font-size:12px;" placeholder="Ex: Morango, Banana, Kiwi, Manga"></textarea>
+          </div>
+        </div>
       </div>
 
       <button class="btn btn-fire btn-full" onclick="saveAdminSettings()">💾 Salvar Configurações</button>
@@ -956,7 +976,13 @@ const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Esta
 const defaultPizzas=[];
 const defaultAcais=[];
 const defaultBebidas=[];
-const defaultAdicionais=[];
+const defaultAdicionais={
+  adicionais:[],
+  coberturas:[],
+  coberturasEspeciais:[],
+  cremes:[],
+  frutas:[]
+};
 
 let configs=defaultConfigs;
 let pizzas =defaultPizzas;
@@ -1163,10 +1189,25 @@ function abrirCustomizacaoAcai(id){
   document.getElementById("modal-acai-title").innerText=acaiEm.name;
   document.getElementById("modal-acai-subtitle").innerText=`${fmt(acaiEm.price)} · Escolha até ${acaiEm.limit} adicionais`;
   atualizarContadorAdc();
-  document.getElementById("adc-container").innerHTML=listaAdicionais.map(adc=>{
-    const id2=adc.trim().replace(/[^a-zA-Z0-9]/g,"-");
-    return `<div class="adc-chip" id="adc-${id2}" onclick="toggleAdc('${adc.trim()}')">${adc.trim()}</div>`;
-  }).join("");
+  const catLabels = {
+    adicionais:'🍫 Adicionais',
+    coberturas:'🍯 Coberturas',
+    coberturasEspeciais:'🌟 Coberturas Especiais',
+    cremes:'🍦 Cremes',
+    frutas:'🍓 Frutas'
+  };
+  const adcObj = listaAdicionais && typeof listaAdicionais === 'object' && !Array.isArray(listaAdicionais) ? listaAdicionais : {adicionais: Array.isArray(listaAdicionais) ? listaAdicionais : []};
+  let adcHtml = '';
+  Object.entries(catLabels).forEach(([key, label]) => {
+    const items = adcObj[key] || [];
+    if(!items.length) return;
+    adcHtml += `<div style="width:100%;padding:6px 0 4px;font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;">${label}</div>`;
+    adcHtml += items.map(adc => {
+      const id2 = adc.trim().replace(/[^a-zA-Z0-9]/g,'-');
+      return `<div class="adc-chip" id="adc-${id2}" onclick="toggleAdc('${adc.trim()}')">${adc.trim()}</div>`;
+    }).join('');
+  });
+  document.getElementById("adc-container").innerHTML = adcHtml || '<div style="color:var(--muted2);font-size:13px;text-align:center;padding:20px;">Nenhum adicional cadastrado</div>';
   document.getElementById("acai-modal").style.display="flex";
 }
 function atualizarContadorAdc(){
@@ -1353,7 +1394,12 @@ function accessAdmin(){
   document.getElementById("config-whatsapp-logista").value=configs.whatsappLogista||configs.whatsapp;
   document.getElementById("config-pix").value=configs.pix;
   document.getElementById("config-tax").value=configs.tax;
-  document.getElementById("config-adicionais").value=listaAdicionais.join(", ");
+  const cats = {adicionais:'cfg-cat-adicionais',coberturas:'cfg-cat-coberturas',coberturasEspeciais:'cfg-cat-coberturasEspeciais',cremes:'cfg-cat-cremes',frutas:'cfg-cat-frutas'};
+  const adc = listaAdicionais && typeof listaAdicionais === 'object' && !Array.isArray(listaAdicionais) ? listaAdicionais : {adicionais: Array.isArray(listaAdicionais) ? listaAdicionais : []};
+  Object.entries(cats).forEach(([key, elId]) => {
+    const el = document.getElementById(elId);
+    if(el) el.value = (adc[key] || []).join(', ');
+  });
   // Aparência
   document.getElementById("color-primary").value=configs.colorPrimary||"#9333ea";
   document.getElementById("color-secondary").value=configs.colorSecondary||"#c026d3";
@@ -1457,7 +1503,12 @@ function saveAdminSettings(){
   configs.whatsappLogista=document.getElementById("config-whatsapp-logista").value||configs.whatsapp;
   configs.pix=document.getElementById("config-pix").value;
   configs.tax=parseFloat(document.getElementById("config-tax").value)||0;
-  listaAdicionais=document.getElementById("config-adicionais").value.split(",").map(i=>i.trim()).filter(i=>i);
+  const cats2 = {adicionais:'cfg-cat-adicionais',coberturas:'cfg-cat-coberturas',coberturasEspeciais:'cfg-cat-coberturasEspeciais',cremes:'cfg-cat-cremes',frutas:'cfg-cat-frutas'};
+  listaAdicionais = {};
+  Object.entries(cats2).forEach(([key, elId]) => {
+    const el = document.getElementById(elId);
+    listaAdicionais[key] = el ? el.value.split(',').map(i=>i.trim()).filter(i=>i) : [];
+  });
   pizzas.forEach(p=>{
     const m=document.getElementById(`adm-pM-${p.id}`),g=document.getElementById(`adm-pG-${p.id}`);
     if(m&&g){p.prices.M=parseFloat(m.value);p.prices.G=parseFloat(g.value);}
