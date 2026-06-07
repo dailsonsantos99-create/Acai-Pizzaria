@@ -1424,7 +1424,7 @@ function adicionarPizza(){
   pizzas.push({id:"p_"+Date.now(),name:n,prices:{M:m,G:g},desc:d||"Sabor especial.",badge});
     ["new-pizza-name","new-pizza-desc","new-pizza-priceM","new-pizza-priceG"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("new-pizza-badge").value="";
-  toggleFormBox("pizza-form-box");renderAdminPizzas();renderMenu();
+  toggleFormBox("pizza-form-box");renderAdminPizzas();renderMenu();salvarNoSupabase();
 }
 function adicionarAcai(){
   const n=document.getElementById("new-acai-name").value.trim();
@@ -1433,7 +1433,7 @@ function adicionarAcai(){
   if(!n||!p)return alert("Preencha Nome e Preço!");
   acais.push({id:"a_"+Date.now(),name:n,price:p,limit:l});
     ["new-acai-name","new-acai-price"].forEach(id=>document.getElementById(id).value="");
-  toggleFormBox("acai-form-box");renderAdminAcais();renderMenu();
+  toggleFormBox("acai-form-box");renderAdminAcais();renderMenu();salvarNoSupabase();
 }
 function adicionarBebidaAdmin(){
   const n=document.getElementById("new-bebida-name").value.trim();
@@ -1444,7 +1444,7 @@ function adicionarBebidaAdmin(){
   bebidas.push({id:"b_"+Date.now(),name:n,price:p,desc:d||"",badge:bdg});
     ["new-bebida-name","new-bebida-desc","new-bebida-price"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("new-bebida-badge").value="";
-  toggleFormBox("bebida-form-box");renderAdminBebidas();renderMenu();
+  toggleFormBox("bebida-form-box");renderAdminBebidas();renderMenu();salvarNoSupabase();
 }
 function atualizarNomeSecao(){
   const secoes = ['pizzas','acai','bebidas'];
