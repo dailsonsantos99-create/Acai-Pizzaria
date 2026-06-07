@@ -702,11 +702,9 @@ const SUPABASE_URL = 'https://lhxanhakrrxlbjuazikk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
 const BASE_CARDAPIO = window.location.origin + '/index.html';
 
-// Pega loja_id da URL
+// Pega loja_id exclusivamente da URL — sem localStorage
 const params = new URLSearchParams(window.location.search);
-const LOJA_ID = params.get('loja') || localStorage.getItem('logista_loja_id') || '';
-
-if(LOJA_ID) localStorage.setItem('logista_loja_id', LOJA_ID);
+const LOJA_ID = params.get('loja') || '';
 
 // ── SUPABASE ──
 async function sbFetch(path, opts={}) {
@@ -734,10 +732,9 @@ async function carregarDoSupabase() {
       acais           = row.acais           || [];
       bebidas         = row.bebidas         || [];
       listaAdicionais = row.adicionais      || [];
-      if(row.loja_fechada) localStorage.setItem('loja_fechada','true');
-      else localStorage.removeItem('loja_fechada');
+      lojaFechada = row.loja_fechada || false;
     }
-  } catch(e) { console.warn('Offline', e); }
+  } catch(e) { console.warn('Erro ao carregar:', e); }
 }
 
 async function salvarNoSupabase() {
@@ -750,7 +747,7 @@ async function salvarNoSupabase() {
         loja_id: LOJA_ID,
         configs, pizzas, acais, bebidas,
         adicionais: listaAdicionais,
-        loja_fechada: localStorage.getItem('loja_fechada') === 'true',
+        loja_fechada: lojaFechada,
         updated_at: new Date().toISOString()
       })
     });
@@ -779,15 +776,14 @@ function tocarSom() {
 async function verificarNovoPedido() {
   if(!LOJA_ID) return;
   try {
-    const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=configs`);
-    // Check via pedidos localStorage polling workaround
-    const pedidos = JSON.parse(localStorage.getItem('app_pedidos') || '[]');
-    const novos = pedidos.filter(p => p.status === 'novo' && new Date(p.ts).getTime() > ultimoPedidoTs);
-    if(novos.length > 0) {
-      ultimoPedidoTs = Date.now();
-      tocarSom();
-      const badge = document.getElementById('badge-novos');
-      if(badge) { badge.style.display='inline-flex'; badge.textContent = pedidos.filter(p=>p.status==='novo').length; }
+    const data = await sbFetch(`/rest/v1/pedidos?loja_id=eq.${LOJA_ID}&status=eq.novo&order=created_at.desc&limit=1`);
+    if(data && data.length > 0){
+      const ts = new Date(data[0].created_at).getTime();
+      if(ts > ultimoPedidoTs){
+        ultimoPedidoTs = Date.now();
+        tocarSom();
+        atualizarBadgePedidos();
+      }
     }
   } catch(e) {}
 }
@@ -802,7 +798,7 @@ async function fazerLogin() {
   
   const senhaConfig = configs.adminSenha || '1234';
   if(senha === senhaConfig) {
-    sessionStorage.setItem('logista_logado_' + LOJA_ID, '1');
+    logistaLogado = true;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('painel').style.display = 'flex';
     iniciarPainel();
@@ -876,13 +872,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('login-sub').textContent = 'Nova loja';
   }
   
-  // Verifica se já estava logado
-  const logado = sessionStorage.getItem('logista_logado_' + LOJA_ID);
-  if(logado === '1') {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('painel').style.display = 'flex';
-    iniciarPainel();
-  }
+  // logistaLogado é sempre false ao recarregar — o lojista deve logar novamente (sem auto-login)
 });
 
 // ── DEMAIS FUNÇÕES (reaproveitadas do index.html) ──
@@ -954,7 +944,7 @@ async function salvarNoSupabase() {
         acais,
         bebidas,
         adicionais: listaAdicionais,
-        loja_fechada: localStorage.getItem('loja_fechada') === 'true',
+        loja_fechada: lojaFechada,
         updated_at: new Date().toISOString()
       })
     });
@@ -980,7 +970,9 @@ let pizzas =defaultPizzas;
 let acais  =defaultAcais;
 let bebidas=defaultBebidas;
 let listaAdicionais=defaultAdicionais;
-// Carrega do Supabase ao iniciar (substitui os valores acima se encontrar no banco)
+let lojaFechada=false;     // estado em memória — lido do Supabase, nunca do localStorage
+let logistaLogado=false;   // autenticação apenas em memória — sem storage de nenhum tipo
+let _pedidosCache=[];      // cache em memória dos pedidos — sem localStorage
 // DOMContentLoaded handled by logista
 
 let carrinho=[],acaiEm=null,adcSel=[],pizzaEm=null,bordaNome="Sem Borda",bordaPreco=0;
@@ -1355,7 +1347,7 @@ function renderAdminBebidas(){
 
 
 function accessAdmin(){
-  const senhaCorreta = localStorage.getItem("admin_senha")||"1234";
+  const senhaCorreta = configs.adminSenha||"1234";
   const pw=prompt("🔐 Senha Admin:");
   if(!pw) return;
   if(pw!==senhaCorreta){ alert("❌ Senha incorreta!"); return; }
@@ -1515,7 +1507,7 @@ function openAdminModal(){
   const mm = g('toggle-meio-a-meio');
   if(mm){ mm.checked = configs.meioAMeio || false; toggleMeioAMeio(configs.meioAMeio || false); }
   // Toggle loja fechada
-  const lf = localStorage.getItem('loja_fechada') === 'true';
+  const lf = lojaFechada;
   const tb = g('btn-toggle-loja');
   if(tb) tb.textContent = lf ? '🔓 Abrir Loja' : '🔒 Fechar Loja';
   // Adicionais por categoria
@@ -1588,7 +1580,7 @@ function novoPedido(){
   closeModal('checkout-modal');
 }
 function enviarPedido(){
-  if(localStorage.getItem('loja_fechada')==='true'){
+  if(lojaFechada){
     alert('⚠️ A loja está fechada no momento. Tente novamente mais tarde!');
     return;
   }
@@ -1760,14 +1752,15 @@ function checkSenha(){
   bar.style.width=widths[score-1]||'25%';
 }
 function alterarSenha(){
-  const senhaCorreta=localStorage.getItem('admin_senha')||'1234';
+  const senhaCorreta=configs.adminSenha||'1234';
   const atual=document.getElementById('senha-atual').value;
   const nova=document.getElementById('senha-nova').value;
   const confirma=document.getElementById('senha-confirma').value;
   if(atual!==senhaCorreta){alert('❌ Senha atual incorreta!');return;}
   if(nova.length<4){alert('❌ A nova senha precisa ter pelo menos 4 caracteres!');return;}
   if(nova!==confirma){alert('❌ As senhas não coincidem!');return;}
-  localStorage.setItem('admin_senha',nova);
+  configs.adminSenha=nova;
+  salvarNoSupabase();
   document.getElementById('senha-atual').value='';
   document.getElementById('senha-nova').value='';
   document.getElementById('senha-confirma').value='';
@@ -1776,10 +1769,12 @@ function alterarSenha(){
 }
 
 /* ── RESET ── */
-function resetarSistema(){
+async function resetarSistema(){
   if(!confirm('⚠️ Tem certeza? Isso apagará TODO o cardápio, imagens e configurações!')) return;
   if(!confirm('🚨 Confirmação final: apagar tudo e voltar ao padrão?')) return;
-  ['app_configs','app_pizzas','app_acais','app_bebidas','app_adicionais','admin_senha','loja_fechada'].forEach(k=>localStorage.removeItem(k));
+  configs=Object.assign({},defaultConfigs);
+  pizzas=[];acais=[];bebidas=[];listaAdicionais=defaultAdicionais;lojaFechada=false;
+  await salvarNoSupabase();
   alert('✅ Sistema resetado! A página será recarregada.');
   location.reload();
 }
@@ -1801,7 +1796,7 @@ function exportarParaCliente(){
   const dadosAcais     = JSON.stringify(acais);
   const dadosBebidas   = JSON.stringify(bebidas);
   const dadosAdicionais= JSON.stringify(listaAdicionais);
-  const dadosSenha     = localStorage.getItem('admin_senha')||'1234';
+  const dadosSenha     = configs.adminSenha||'1234';
 
   // Read the current HTML page source
   let src = document.documentElement.outerHTML;
@@ -1852,14 +1847,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let filtroPedidos = 'todos';
 
 async function registrarPedido(dados){
-  const pedidos = JSON.parse(localStorage.getItem('loja_pedidos')||'[]');
-  const id = 'PED-' + Date.now();
-  const hora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  const data = new Date().toLocaleDateString('pt-BR');
-  const pedido = {id, hora, data, status:'novo', ...dados};
-  pedidos.unshift(pedido);
-  localStorage.setItem('loja_pedidos', JSON.stringify(pedidos.slice(0,100)));
-  // Salva no Supabase para persistência entre dispositivos
+  // Salva apenas no Supabase — sem localStorage
   try {
     await sbFetch('/rest/v1/pedidos', {
       method: 'POST',
@@ -1871,15 +1859,17 @@ async function registrarPedido(dados){
       })
     });
     console.log('✅ Pedido salvo no Supabase');
+    // Recarrega pedidos do banco após salvar
+    await carregarPedidosSupabase();
   } catch(e) { console.warn('Erro ao salvar pedido no Supabase:', e); }
 }
 
 function getPedidos(){
-  return JSON.parse(localStorage.getItem('loja_pedidos')||'[]');
+  return _pedidosCache;
 }
 
 function salvarPedidos(pedidos){
-  localStorage.setItem('loja_pedidos', JSON.stringify(pedidos));
+  _pedidosCache = pedidos;
 }
 
 function setFiltro(f, btn){
@@ -1895,22 +1885,24 @@ async function carregarPedidosSupabase(){
   try {
     const data = await sbFetch(`/rest/v1/pedidos?loja_id=eq.${LOJA_ID}&order=created_at.desc&limit=100`);
     if(data && data.length > 0){
+      const novosIds = new Set(_pedidosCache.map(p=>p.id));
       const pedidos = data.map(p => ({
         id: p.id,
-        ...p.dados,
-        status: p.status,
-        ts: new Date(p.created_at).getTime()
+        supabaseId: p.id,
+        hora: new Date(p.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+        data: new Date(p.created_at).toLocaleDateString('pt-BR'),
+        status: p.status || 'novo',
+        ...(p.dados || {})
       }));
-      // Verifica se há novos pedidos (som de notificação)
-      const local = getPedidos();
-      const localIds = new Set(local.map(p => p.id));
-      const novosChegando = pedidos.filter(p => !localIds.has(p.id) && p.status === 'novo');
-      if(novosChegando.length > 0) tocarSom();
-
-      localStorage.setItem('loja_pedidos', JSON.stringify(pedidos));
-      renderPedidos();
-      atualizarBadgePedidos();
+      // Som se chegou pedido novo
+      const chegando = pedidos.filter(p => !novosIds.has(p.id) && p.status==='novo');
+      if(chegando.length > 0) tocarSom();
+      _pedidosCache = pedidos;
+    } else {
+      _pedidosCache = [];
     }
+    renderPedidos();
+    atualizarBadgePedidos();
   } catch(e){ console.warn('Erro ao carregar pedidos:', e); }
 }
 
@@ -2044,11 +2036,18 @@ function mostrarToast(txt){
   t._timer = setTimeout(()=>{ t.style.opacity='0'; }, 2800);
 }
 
-function limparEntregues(){
+async function limparEntregues(){
   if(!confirm('Remover todos os pedidos entregues?')) return;
-  const pedidos = getPedidos().filter(p=>p.status!=='entregue');
-  salvarPedidos(pedidos);
+  const todos = getPedidos();
+  const entregues = todos.filter(p=>p.status==='entregue');
+  salvarPedidos(todos.filter(p=>p.status!=='entregue'));
   renderPedidos();
+  // Remove do Supabase
+  for(const p of entregues){
+    try {
+      await sbFetch(`/rest/v1/pedidos?id=eq.${p.id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    } catch(e) { console.warn('Erro ao remover pedido:', e); }
+  }
 }
 
 function atualizarBadgePedidos(){
@@ -2066,7 +2065,7 @@ renderMenu();
 atualizarStatusLoja();
 
 function atualizarStatusLoja(){
-  const fechada = localStorage.getItem('loja_fechada') === 'true';
+  const fechada = lojaFechada;
   const dot = document.getElementById('status-dot');
   const txt = document.getElementById('status-text');
   const banner = document.getElementById('loja-fechada-banner');
@@ -2107,13 +2106,10 @@ function atualizarStatusLoja(){
 }
 
 function toggleLoja(){
-  const fechada = localStorage.getItem('loja_fechada') === 'true';
-  const novoStatus = !fechada;
-  if(novoStatus) localStorage.setItem('loja_fechada', 'true');
-  else localStorage.removeItem('loja_fechada');
+  lojaFechada = !lojaFechada;
   salvarNoSupabase();
   atualizarStatusLoja();
-  if(novoStatus){
+  if(lojaFechada){
     alert('🔒 Loja fechada! Os clientes não conseguirão finalizar pedidos.');
   } else {
     alert('✅ Loja aberta! Pedidos liberados.');
