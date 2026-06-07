@@ -738,22 +738,45 @@ async function carregarDoSupabase() {
   } catch(e) { console.warn('Erro ao carregar:', e); }
 }
 
-async function salvarNoSupabase() {
+async function salvarNoSupabase(tentativa = 1) {
+  const payload = {
+    loja_id: LOJA_ID,
+    configs, pizzas, acais, bebidas,
+    adicionais: listaAdicionais,
+    loja_fechada: lojaFechada,
+    updated_at: new Date().toISOString()
+  };
   try {
-    await sbFetch('/rest/v1/cardapio', {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/cardapio', {
       method: 'POST',
-      prefer: 'return=minimal',
-      headers: { 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({
-        loja_id: LOJA_ID,
-        configs, pizzas, acais, bebidas,
-        adicionais: listaAdicionais,
-        loja_fechada: lojaFechada,
-        updated_at: new Date().toISOString()
-      })
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(payload)
     });
-    console.log('✅ Salvo!');
-  } catch(e) { console.warn('Erro ao salvar:', e); }
+    if (!res.ok && res.status !== 204) {
+      const err = await res.json().catch(() => ({}));
+      // Timeout do Supabase (código 57014) — tenta de novo até 3x
+      if ((err.code === '57014' || res.status === 500) && tentativa < 3) {
+        console.warn(`⏳ Timeout Supabase, tentativa ${tentativa}/3...`);
+        await new Promise(r => setTimeout(r, 1000 * tentativa));
+        return salvarNoSupabase(tentativa + 1);
+      }
+      throw new Error(`Supabase ${res.status}: ${err.message || JSON.stringify(err)}`);
+    }
+    console.log('✅ Salvo no Supabase!');
+  } catch(e) {
+    console.warn('Erro ao salvar:', e);
+    if (tentativa < 3) {
+      await new Promise(r => setTimeout(r, 1000 * tentativa));
+      return salvarNoSupabase(tentativa + 1);
+    }
+    mostrarToast('❌ Erro ao salvar. Verifique sua conexão.');
+    throw e;
+  }
 }
 
 // ── POLLING para novos pedidos ──
@@ -1015,73 +1038,24 @@ function renderTabs(){
 }
 
 function renderMenu(){
-  renderTabs();
-  // Show warning if no WhatsApp configured
-  const numWpp = (configs.whatsappLogista || configs.whatsapp || '').replace(/\D/g,'');
-  const existingBanner = document.getElementById('wpp-warning-banner');
-  if(!numWpp || numWpp.length < 10){
-    if(!existingBanner){
-      const banner = document.createElement('div');
-      banner.id = 'wpp-warning-banner';
-      banner.style.cssText = 'background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;margin:8px 16px;font-size:13px;color:#f87171;text-align:center;';
-      banner.innerHTML = '⚠️ Configure o WhatsApp no painel admin para receber pedidos';
-      document.querySelector('.container')?.prepend(banner);
-    }
-  } else if(existingBanner){ existingBanner.remove(); }
-  // Update section labels
-  const secs = [{s:'pizzas',nk:'nomePizzas',ek:'emojPizzas'},{s:'acai',nk:'nomeAcai',ek:'emojAcai'},{s:'bebidas',nk:'nomeBebidas',ek:'emojBebidas'}];
-  secs.forEach(({s,nk,ek})=>{
-    const en=document.getElementById('nome-'+s); if(en) en.textContent=configs[nk]||en.textContent;
-    const ee=document.getElementById('emoj-'+s); if(ee) ee.textContent=configs[ek]||ee.textContent;
-  });
-  setTimeout(observarCards, 50);
-  // Meio a Meio card
-  const mmCard = document.getElementById('meio-a-meio-card');
-  if(mmCard) mmCard.style.display = configs.meioAMeio ? 'block' : 'none';
-  document.getElementById("shop-desc").innerText=configs.desc||"";
-  document.getElementById("header-name1").textContent=configs.name||"Açaí+";
-  document.getElementById("header-name2").textContent=configs.nameSecondary||"Pizzaria";
-  document.getElementById("acai-count").innerText=acais.length+" opções";
-  document.getElementById("bebida-count").innerText=bebidas.length+" itens";
+  // No logista, renderMenu só atualiza os elementos do painel admin
+  // (não renderiza o cardápio público — isso é do index.html)
 
-  document.getElementById("pizzas-list").innerHTML=pizzas.map((p,i)=>
-    `<div class="card" style="animation-delay:${i*0.04}s">
-      <img class="card-img" src="${p.img||getPizzaImg(p.id)}" onerror="this.src=SVG_FB_PIZZA" alt="${p.name}">
-      <div class="card-body">
-        <div>
-          <div class="card-title">${p.name}</div>
-          <div class="card-desc">${p.desc}</div>
-        </div>
-        <div class="card-footer">
-          <div><span class="price-from">a partir de </span><span class="price">${fmt(p.prices.M)}</span></div>
-          <button class="btn btn-primary btn-sm" onclick="abrirCustomizacaoPizza('${p.id}')">Escolher ›</button>
-        </div>
-      </div>
-    </div>`).join("");
+  // Atualiza nome da loja no cabeçalho do painel
+  const nomeEl = document.getElementById('painel-nome-loja');
+  if(nomeEl) nomeEl.textContent = configs.name || 'Minha Loja';
 
-  document.getElementById("acais-grid").innerHTML=acais.map((a,i)=>
-    `<div class="acai-card" style="animation-delay:${i*0.05}s">
-      <img src="${a.img||getAcaiImg(a.id)}" onerror="this.src=SVG_FB_ACAI" alt="${a.name}">
-      <div class="acai-name">${a.name}</div>
-      <div class="acai-badge">${a.limit} adicionais</div>
-      <div class="acai-price">${fmt(a.price)}</div>
-      <button class="btn btn-primary btn-sm" onclick="abrirCustomizacaoAcai('${a.id}')">Montar ›</button>
-    </div>`).join("");
+  // Atualiza link do cardápio
+  const url = `${BASE_CARDAPIO}?loja=${LOJA_ID}`;
+  const urlText = document.getElementById('cardapio-url-text');
+  if(urlText) urlText.textContent = url;
+  const btnVer = document.getElementById('btn-ver-cardapio');
+  if(btnVer) btnVer.href = url;
 
-  document.getElementById("bebidas-list").innerHTML=bebidas.map((b,i)=>
-    `<div class="card" style="animation-delay:${i*0.04}s">
-      <img class="card-img" src="${b.img||getBebidaImg(b.id)}" onerror="this.src=SVG_FB_BEB" alt="${b.name}">
-      <div class="card-body">
-        <div>
-          <div class="card-title">${b.name}</div>
-          <div class="card-desc">${b.desc}</div>
-        </div>
-        <div class="card-footer">
-          <span class="price">${fmt(b.price)}</span>
-          <button class="btn btn-primary btn-sm" onclick="adicionarBebida('${b.id}')">+ Adicionar</button>
-        </div>
-      </div>
-    </div>`).join("");
+  // Atualiza listas do painel (admin)
+  renderAdminPizzas();
+  renderAdminAcais();
+  renderAdminBebidas();
 }
 
 function adicionarBebida(id){
