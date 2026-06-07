@@ -720,6 +720,7 @@ async function sbFetch(path, opts={}) {
       ...(opts.headers || {})
     }
   });
+  if (!res.ok && res.status !== 406) console.error('Supabase error:', res.status, await res.text());
   return res.status === 204 ? null : res.json().catch(() => null);
 }
 
@@ -852,7 +853,15 @@ function iniciarPainel() {
 // ── INIT ──
 window.addEventListener('DOMContentLoaded', async () => {
   if(!LOJA_ID) {
-    document.getElementById('login-sub').textContent = 'Link inválido';
+    document.getElementById('login-sub').textContent = '⚠️ Link inválido — solicite um novo link ao administrador';
+    document.getElementById('login-sub').style.color = '#ef4444';
+    const card = document.querySelector('.login-card');
+    if(card){
+      const aviso = document.createElement('div');
+      aviso.style.cssText = 'background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 14px;font-size:13px;color:#f87171;margin-top:16px;text-align:center;';
+      aviso.innerHTML = '🔗 Este link não tem um ID de loja.<br>Acesse via o link correto fornecido pelo administrador.';
+      card.appendChild(aviso);
+    }
     document.getElementById('inp-senha').disabled = true;
     document.querySelector('.btn-login').disabled = true;
     return;
@@ -928,27 +937,9 @@ function imgWithFallback(src, fallback, cls='') {
 
 
 /* ── SUPABASE CONFIG ── */
-// (removed duplicate)
-// (removed duplicate)
+// (função sbFetch definida acima)
 
 // LOJA_ID handled by logista
-
-async function sbFetch(path, opts={}) {
-  const res = await fetch(SUPABASE_URL + path, {
-    ...opts,
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': opts.prefer || '',
-      ...(opts.headers || {})
-    }
-  });
-  if (!res.ok && res.status !== 406) console.error('Supabase error:', res.status, await res.text());
-  return res.status === 204 ? null : res.json().catch(() => null);
-}
-
-// (removed duplicate function)
 
 async function salvarNoSupabase() {
   try {
@@ -1482,7 +1473,7 @@ function toggleAba(key, val){
 
 function toggleMeioAMeio(val){
   configs.meioAMeio = val;
-  const span = document.getElementById('span-toggle-meio-a-meio');
+  const span = document.getElementById('span-meio-a-meio');
   if(span){
     span.style.background = val ? 'var(--accent)' : 'var(--surface2)';
     span.querySelector('span').style.left = val ? '23px' : '3px';
@@ -1577,9 +1568,9 @@ function saveAdminSettings(){
 }
 function copiarPix(){navigator.clipboard.writeText(document.getElementById("pix-key-text").innerText).then(()=>alert("Chave PIX copiada!"));}
 function mostrarConfirmacao(){
-  const total = carrinho.reduce((s,i)=>s+i.price*i.qty,0);
+  const total = carrinho.reduce((s,i)=>s+i.price,0);
   const items = carrinho.map(i =>
-    `<div class="confirm-item"><span>${i.qty}x ${i.name}</span><span>${fmt(i.price*i.qty)}</span></div>`
+    `<div class="confirm-item"><span>1x ${i.name}</span><span>${fmt(i.price)}</span></div>`
   ).join('');
   document.getElementById('confirm-items').innerHTML =
     items + `<div class="confirm-item"><span>Total</span><span>${fmt(total)}</span></div>`;
@@ -1751,6 +1742,7 @@ function aplicarCores(p,s){
 function salvarAparencia(){
   configs.colorPrimary=document.getElementById('color-primary').value;
   configs.colorSecondary=document.getElementById('color-secondary').value;
+  salvarNoSupabase();
     alert('✅ Aparência salva!');
 }
 
@@ -1830,10 +1822,14 @@ let pizzas=${dadosPizzas};
 let acais=${dadosAcais};
 let bebidas=${dadosBebidas};
 let listaAdicionais=${dadosAdicionais};
-// Dados carregados pelo Supabase
-(function(){
-  }
-})();`;
+// Dados carregados diretamente (sem Supabase)
+document.addEventListener('DOMContentLoaded', () => {
+  renderMenu();
+  aplicarMarca();
+  aplicarCores(configs.colorPrimary||'#9333ea', configs.colorSecondary||'#c026d3');
+  const ls = document.getElementById('loading-screen');
+  if(ls){ ls.classList.add('hide'); setTimeout(()=>ls.remove(), 500); }
+});`;
 
   src = src.replace(initOld, initNew);
 
@@ -1855,14 +1851,27 @@ let listaAdicionais=${dadosAdicionais};
 /* ── PEDIDOS DO LOJISTA ── */
 let filtroPedidos = 'todos';
 
-function registrarPedido(dados){
+async function registrarPedido(dados){
   const pedidos = JSON.parse(localStorage.getItem('loja_pedidos')||'[]');
   const id = 'PED-' + Date.now();
   const hora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const data = new Date().toLocaleDateString('pt-BR');
-  pedidos.unshift({id, hora, data, status:'novo', ...dados});
-  // Guarda apenas últimos 100 pedidos
+  const pedido = {id, hora, data, status:'novo', ...dados};
+  pedidos.unshift(pedido);
   localStorage.setItem('loja_pedidos', JSON.stringify(pedidos.slice(0,100)));
+  // Salva no Supabase para persistência entre dispositivos
+  try {
+    await sbFetch('/rest/v1/pedidos', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({
+        loja_id: LOJA_ID,
+        dados: dados,
+        status: 'novo'
+      })
+    });
+    console.log('✅ Pedido salvo no Supabase');
+  } catch(e) { console.warn('Erro ao salvar pedido no Supabase:', e); }
 }
 
 function getPedidos(){
@@ -2100,7 +2109,8 @@ function atualizarStatusLoja(){
 function toggleLoja(){
   const fechada = localStorage.getItem('loja_fechada') === 'true';
   const novoStatus = !fechada;
-  localStorage.setItem('loja_fechada', novoStatus);
+  if(novoStatus) localStorage.setItem('loja_fechada', 'true');
+  else localStorage.removeItem('loja_fechada');
   salvarNoSupabase();
   atualizarStatusLoja();
   if(novoStatus){
