@@ -914,6 +914,7 @@ async function sbFetch(path, opts={}) {
 }
 
 async function carregarDoSupabase() {
+  if(!LOJA_ID) { renderMenu(); aplicarMarca(); const ls=document.getElementById('loading-screen'); if(ls){ls.classList.add('hide');setTimeout(()=>ls.remove(),500);} return; }
   try {
     const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=*`);
     if (data && data.length > 0) {
@@ -966,7 +967,7 @@ async function salvarNoSupabase() {
 }
 
 /* ── DEFAULTS ── */
-const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:"",meioAMeio:false,abaPizzas:true,abaAcai:true,abaBebidas:true,nomePizzas:"Pizzas",nomeAcai:"Açaí Premium",nomeBebidas:"Bebidas",emojPizzas:"🍕",emojAcai:"🍧",emojBebidas:"🥤"};
+const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:"",meioAMeio:false,abaPizzas:true,abaAcai:true,abaBebidas:true,nomePizzas:"Pizzas",nomeAcai:"Açaí Premium",nomeBebidas:"Bebidas",emojPizzas:"🍕",emojAcai:"🍧",emojBebidas:"🥤",adminSenha:"1234"};
 const defaultPizzas=[];
 const defaultAcais=[];
 const defaultBebidas=[];
@@ -1471,7 +1472,7 @@ function checkWppFilled(){
   if(alert) alert.style.display = (!wpp && !log) ? 'inline' : 'none';
 }
 
-function toggleAba(key, val){
+async function toggleAba(key, val){
   configs[key] = val;
   const span = document.getElementById('span-' + key);
   if(span){
@@ -1547,7 +1548,7 @@ function novoPedido(){
   fecharConfirmacao();
   closeModal('checkout-modal');
 }
-function enviarPedido(){
+async function enviarPedido(){
   if(lojaFechada){
     alert('⚠️ A loja está fechada no momento. Tente novamente mais tarde!');
     return;
@@ -1579,7 +1580,7 @@ function enviarPedido(){
   else document.getElementById("pix-display-box").style.display="none";
   document.getElementById("success-modal").style.display="flex";
   // Registra pedido no histórico do lojista
-  registrarPedido({
+  await registrarPedido({
     nome, phone, street, num, bairro, pag,
     troco: pag==="Dinheiro"&&troco ? troco : null,
     itens: carrinho.map(i=>({name:i.name,custom:i.custom,price:i.price})),
@@ -1611,7 +1612,7 @@ function showAdminPage(pageId, btn){
 }
 
 /* ── LOGO ── */
-function trocarBanner(){
+async function trocarBanner(){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
   inp.onchange=async()=>{
     const b64=await fileToB64(inp.files[0]);
@@ -1648,19 +1649,22 @@ function trocarLogo(){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
   inp.onchange=async()=>{
     const r=new FileReader();
-    r.onload=()=>{
+    r.onload=async()=>{
       configs.logo=r.result;
-            aplicarMarca();
+      aplicarMarca();
       atualizarLogoPreview();
+      await salvarNoSupabase();
+      mostrarToast('✅ Logo salva!');
     };
     r.readAsDataURL(inp.files[0]);
   };
   inp.click();
 }
-function removerLogo(){
+async function removerLogo(){
   configs.logo="";
-    aplicarMarca();
+  aplicarMarca();
   atualizarLogoPreview();
+  await salvarNoSupabase();
 }
 function atualizarLogoPreview(){
   const img=document.getElementById('logo-preview-img');
@@ -1700,7 +1704,7 @@ function aplicarCores(p,s){
   document.documentElement.style.setProperty('--brand-primary',p);
   document.documentElement.style.setProperty('--brand-secondary',s);
 }
-function salvarAparencia(){
+async function salvarAparencia(){
   configs.colorPrimary=document.getElementById('color-primary').value;
   configs.colorSecondary=document.getElementById('color-secondary').value;
   await salvarNoSupabase();
@@ -1720,7 +1724,7 @@ function checkSenha(){
   bar.style.background=colors[score-1]||'#ef4444';
   bar.style.width=widths[score-1]||'25%';
 }
-function alterarSenha(){
+async function alterarSenha(){
   const senhaCorreta=configs.adminSenha||'1234';
   const atual=document.getElementById('senha-atual').value;
   const nova=document.getElementById('senha-nova').value;
@@ -2054,7 +2058,7 @@ function atualizarStatusLoja(){
   }
 }
 
-function toggleLoja(){
+async function toggleLoja(){
   const novoStatus = !lojaFechada;
   lojaFechada = novoStatus;
   await salvarNoSupabase();
