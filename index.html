@@ -914,7 +914,7 @@ async function sbFetch(path, opts={}) {
 }
 
 async function carregarDoSupabase() {
-  if(!LOJA_ID) { renderMenu(); aplicarMarca(); const ls=document.getElementById('loading-screen'); if(ls){ls.classList.add('hide');setTimeout(()=>ls.remove(),500);} return; }
+  if(!LOJA_ID) { renderMenu(); aplicarMarca(); esconderLoading(); return; }
   try {
     const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=*`);
     if (data && data.length > 0) {
@@ -940,9 +940,7 @@ async function carregarDoSupabase() {
   } catch(e) { console.warn('Erro ao carregar do Supabase:', e); }
   renderMenu();
   aplicarMarca();
-  // Esconde loading screen
-  const ls = document.getElementById('loading-screen');
-  if(ls){ ls.classList.add('hide'); setTimeout(()=>ls.remove(), 500); }
+  esconderLoading();
 }
 
 async function salvarNoSupabase() {
@@ -985,7 +983,17 @@ let acais  =defaultAcais;
 let bebidas=defaultBebidas;
 let listaAdicionais=defaultAdicionais;
 let lojaFechada=false; // estado mantido em memória e no Supabase — sem localStorage
-// Carrega do Supabase ao iniciar (substitui os valores acima se encontrar no banco)
+
+// Função auxiliar para esconder o loading screen
+function esconderLoading(){
+  const ls = document.getElementById('loading-screen');
+  if(ls){ ls.classList.add('hide'); setTimeout(()=>{ if(ls.parentNode) ls.remove(); }, 500); }
+}
+
+// Timeout de segurança: se após 8s o loading ainda estiver visível, some mesmo assim
+setTimeout(() => esconderLoading(), 8000);
+
+// Carrega do Supabase ao iniciar
 document.addEventListener('DOMContentLoaded', () => carregarDoSupabase());
 
 let carrinho=[],acaiEm=null,adcSel=[],pizzaEm=null,bordaNome="Sem Borda",bordaPreco=0;
@@ -1795,8 +1803,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMenu();
   aplicarMarca();
   aplicarCores(configs.colorPrimary||'#9333ea', configs.colorSecondary||'#c026d3');
-  const ls = document.getElementById('loading-screen');
-  if(ls){ ls.classList.add('hide'); setTimeout(()=>ls.remove(), 500); }
+  esconderLoading();
 });`;
 
   src = src.replace(initOld, initNew);
