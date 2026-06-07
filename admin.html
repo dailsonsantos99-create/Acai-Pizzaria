@@ -183,14 +183,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <script>
 const USER = 'Admin';
-// Senha carregada do localStorage (não exposta no código-fonte)
-function getAdminPass() { return localStorage.getItem('master_admin_pass') || btoa('190614'); }
-function checkAdminPass(p) { return p === atob(getAdminPass()) || p === getAdminPass(); }
+// Senha master fixa no código — painel admin é interno (não exposto ao cliente final)
+const MASTER_PASS = '190614';
+function checkAdminPass(p) { return p === MASTER_PASS; }
 const BASE_LOGISTA = 'https://acai-pizzaria.vercel.app/logista.html';
 const BASE_CARDAPIO = 'https://acai-pizzaria.vercel.app';
 const BASE = BASE_LOGISTA;
 const SUPABASE_URL = 'https://lhxanhakrrxlbjuazikk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
+// Estado de autenticação apenas em memória (sessionStorage limpo ao fechar o browser — aceitável)
+let adminLogado = false;
 let slugManual = false;
 let clientes = [];
 
@@ -249,35 +251,18 @@ async function login() {
   const u = document.getElementById('inp-user').value.trim();
   const p = document.getElementById('inp-pass').value;
   if (u === USER && checkAdminPass(p)) {
-    sessionStorage.setItem('admin_logado', '1');
+    adminLogado = true;
     document.getElementById('login-screen').style.display = 'none';
     const painel = document.getElementById('painel');
     painel.style.display = 'flex';
     await carregarClientes();
-    await migrarLocalStorage(); // migra clientes antigos do localStorage
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
 }
 
-// Migra clientes antigos do localStorage para o Supabase
-async function migrarLocalStorage() {
-  const antigos = JSON.parse(localStorage.getItem('cdg_clientes') || '[]');
-  if (!antigos.length) return;
-  for (const c of antigos) {
-    const jaExiste = clientes.find(x => x.slug === c.slug);
-    if (!jaExiste) {
-      await salvarClienteSupabase(c.nome, c.slug);
-    }
-  }
-  if (antigos.length > 0) {
-    localStorage.removeItem('cdg_clientes');
-    await carregarClientes();
-  }
-}
-
 function logout() {
-  sessionStorage.removeItem('admin_logado');
+  adminLogado = false;
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('painel').style.display = 'none';
   document.getElementById('inp-user').value = '';
@@ -403,11 +388,8 @@ function renderLista() {
 }
 // Verifica se já está logado ao carregar
 window.addEventListener('DOMContentLoaded', async () => {
-  if (sessionStorage.getItem('admin_logado') === '1') {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('painel').style.display = 'flex';
-    await carregarClientes();
-  }
+  // Sem auto-login — o admin deve logar a cada sessão (segurança)
+  // adminLogado começa false; o login é feito manualmente
 });
 </script>
 </body>
