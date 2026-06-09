@@ -938,12 +938,18 @@ async function carregarDoSupabase() {
       });
     }
   } catch(e) { console.warn('Erro ao carregar do Supabase:', e); }
+  _dadosCarregados = true; // libera saves a partir daqui
   renderMenu();
   aplicarMarca();
   esconderLoading();
 }
 
 async function salvarNoSupabase(tentativa = 1) {
+  // Nunca salvar antes dos dados do banco serem carregados
+  if(!_dadosCarregados) {
+    console.warn('⚠️ Save bloqueado: dados ainda não carregados do banco');
+    return;
+  }
   const payload = {
     loja_id: LOJA_ID,
     configs, pizzas, acais, bebidas,
@@ -1015,6 +1021,7 @@ let acais  =defaultAcais;
 let bebidas=defaultBebidas;
 let listaAdicionais=defaultAdicionais;
 let lojaFechada=false; // estado mantido em memória e no Supabase — sem localStorage
+let _dadosCarregados = false; // bloqueia saves antes de carregar do banco
 
 // Função auxiliar para esconder o loading screen
 function esconderLoading(){
