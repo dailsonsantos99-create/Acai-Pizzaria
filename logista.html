@@ -853,7 +853,7 @@ function sair() {
 function copiarLinkCardapio() {
   const url = `${BASE_CARDAPIO}?loja=${LOJA_ID}`;
   navigator.clipboard.writeText(url);
-  alert('✅ Link copiado!');
+  mostrarToast('✅ Link copiado!');
 }
 
 function iniciarPainel() {
@@ -1588,18 +1588,17 @@ function atualizarBanner(){
   }
 }
 async function trocarLogo(){
-  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-  inp.onchange=async()=>{
-    const r=new FileReader();
-    inp.onchange=async()=>{
-    const b64=await comprimirImagem(inp.files[0],300,0.80);
-    configs.logo=b64;
-      aplicarMarca();
-      atualizarLogoPreview();
-      await salvarNoSupabase();
-      mostrarToast('✅ Logo salva!');
-    };
-    r.readAsDataURL(inp.files[0]);
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = async () => {
+    if(!inp.files[0]) return;
+    const b64 = await comprimirImagem(inp.files[0], 300, 0.80);
+    configs.logo = b64;
+    aplicarMarca();
+    atualizarLogoPreview();
+    await salvarNoSupabase();
+    mostrarToast('✅ Logo salva!');
   };
   inp.click();
 }
@@ -1681,7 +1680,7 @@ async function alterarSenha(){
   document.getElementById('senha-nova').value='';
   document.getElementById('senha-confirma').value='';
   document.getElementById('senha-strength').style.background='var(--border2)';
-  alert('✅ Senha alterada com sucesso!');
+  mostrarToast('✅ Senha alterada!');
 }
 
 /* ── RESET ── */
@@ -1691,7 +1690,7 @@ async function resetarSistema(){
   configs=Object.assign({},defaultConfigs);
   pizzas=[];acais=[];bebidas=[];listaAdicionais=defaultAdicionais;lojaFechada=false;
   await salvarNoSupabase();
-  alert('✅ Sistema resetado! A página será recarregada.');
+  mostrarToast('✅ Sistema resetado! Recarregando...');
   location.reload();
 }
 
@@ -2026,9 +2025,9 @@ async function toggleLoja(){
   await salvarNoSupabase();
   atualizarStatusLoja();
   if(lojaFechada){
-    alert('🔒 Loja fechada! Os clientes não conseguirão finalizar pedidos.');
+    mostrarToast('🔒 Loja fechada!');
   } else {
-    alert('✅ Loja aberta! Pedidos liberados.');
+    mostrarToast('✅ Loja aberta!');
   }
 }
 
