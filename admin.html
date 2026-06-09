@@ -342,6 +342,7 @@ async function login() {
   const p = document.getElementById('inp-pass').value;
   if (u === ADMIN_USER && btoa(p) === ADMIN_PASS_HASH) {
     adminLogado = true;
+    sessionStorage.setItem('admin_auth', '1'); // persiste sessão no F5
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('painel').style.display = 'flex';
     await carregarClientes();
@@ -352,6 +353,7 @@ async function login() {
 
 function logout() {
   adminLogado = false;
+  sessionStorage.removeItem('admin_auth');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('painel').style.display = 'none';
   document.getElementById('inp-user').value = '';
@@ -523,10 +525,18 @@ function renderLista() {
 }
 
 // ── INIT ──
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   // Preenche vencimento padrão (30 dias)
   const d = new Date(); d.setDate(d.getDate()+30);
   document.getElementById('inp-vencimento').value = d.toISOString().slice(0,10);
+
+  // Restaura sessão após F5 — sessionStorage sobrevive ao reload mas não ao fechar a aba
+  if (sessionStorage.getItem('admin_auth') === '1') {
+    adminLogado = true;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('painel').style.display = 'flex';
+    await carregarClientes();
+  }
 });
 </script>
 </body>
