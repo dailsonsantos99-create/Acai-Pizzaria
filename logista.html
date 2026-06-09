@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel do Logista</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap"></noscript>
 <style>
 
 :root {
@@ -754,8 +757,26 @@ async function sbFetch(path, opts={}) {
 
 async function carregarDoSupabase() {
   if(!LOJA_ID) return;
+
+  // ── Cache local: pré-preenche a tela instantaneamente ──
+  const CACHE_KEY = 'cdp_cache_' + LOJA_ID;
+  const CACHE_TTL = 3 * 60 * 1000; // logista usa TTL menor (3 min) para ver mudanças rápido
   try {
-    const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=*`);
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (cached && (Date.now() - cached.ts) < CACHE_TTL) {
+      configs         = cached.configs        || defaultConfigs;
+      pizzas          = cached.pizzas         || [];
+      acais           = cached.acais          || [];
+      bebidas         = cached.bebidas        || [];
+      listaAdicionais = cached.adicionais     || [];
+      lojaFechada     = cached.loja_fechada   || false;
+      _dadosCarregados = true;
+      return; // retorna rápido; salvarNoSupabase vai buscar frescos quando necessário
+    }
+  } catch(e) {}
+
+  try {
+    const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=configs,pizzas,acais,bebidas,adicionais,loja_fechada`);
     if(data && data.length > 0) {
       const row = data[0];
       configs         = row.configs         || defaultConfigs;
@@ -763,7 +784,8 @@ async function carregarDoSupabase() {
       acais           = row.acais           || [];
       bebidas         = row.bebidas         || [];
       listaAdicionais = row.adicionais      || [];
-      lojaFechada = row.loja_fechada || false;
+      lojaFechada     = row.loja_fechada    || false;
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...row, ts: Date.now() })); } catch(e) {}
     }
   } catch(e) { console.warn('Erro ao carregar:', e); }
   _dadosCarregados = true; // libera saves a partir daqui
@@ -775,6 +797,8 @@ async function salvarNoSupabase(tentativa = 1) {
     console.warn('⚠️ Save bloqueado: dados ainda não carregados do banco');
     return;
   }
+  // Invalida cache para cliente ver dados frescos na próxima visita
+  try { localStorage.removeItem('cdp_cache_' + LOJA_ID); } catch(e) {}
   const payload = {
     loja_id: LOJA_ID,
     configs, pizzas, acais, bebidas,
