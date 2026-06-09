@@ -736,9 +736,15 @@ async function carregarDoSupabase() {
       lojaFechada = row.loja_fechada || false;
     }
   } catch(e) { console.warn('Erro ao carregar:', e); }
+  _dadosCarregados = true; // libera saves a partir daqui
 }
 
 async function salvarNoSupabase(tentativa = 1) {
+  // Nunca salvar antes dos dados do banco serem carregados
+  if(!_dadosCarregados) {
+    console.warn('⚠️ Save bloqueado: dados ainda não carregados do banco');
+    return;
+  }
   const payload = {
     loja_id: LOJA_ID,
     configs, pizzas, acais, bebidas,
@@ -987,6 +993,7 @@ let acais  =defaultAcais;
 let bebidas=defaultBebidas;
 let listaAdicionais=defaultAdicionais;
 let lojaFechada=false;     // estado em memória — lido do Supabase, nunca do localStorage
+let _dadosCarregados = false; // bloqueia saves antes de carregar do banco
 let logistaLogado=false;   // autenticação apenas em memória — sem storage de nenhum tipo
 let _pedidosCache=[];      // cache em memória dos pedidos — sem localStorage
 // DOMContentLoaded handled by logista
@@ -1269,7 +1276,7 @@ function accessAdmin(){
   ['abaPizzas','abaAcai','abaBebidas'].forEach(key => {
     const t = document.getElementById('toggle-' + key);
     const val = configs[key] !== false;
-    if(t){ t.checked = val; toggleAba(key, val); }
+    if(t){ t.checked = val; _atualizarVisualAba(key, val); } // sem save
   });
   // Set meio a meio toggle
   const mmToggle = document.getElementById('toggle-meio-a-meio');
@@ -1409,7 +1416,7 @@ function openAdminModal(){
   ['abaPizzas','abaAcai','abaBebidas'].forEach(key => {
     const t = g('toggle-' + key);
     const val = configs[key] !== false;
-    if(t){ t.checked = val; toggleAba(key, val); }
+    if(t){ t.checked = val; _atualizarVisualAba(key, val); } // sem save
   });
   // Nomes das seções
   [['pizzas','nomePizzas','emojPizzas'],['acai','nomeAcai','emojAcai'],['bebidas','nomeBebidas','emojBebidas']].forEach(([s,nk,ek])=>{
@@ -1418,7 +1425,7 @@ function openAdminModal(){
   });
   // Meio a meio
   const mm = g('toggle-meio-a-meio');
-  if(mm){ mm.checked = configs.meioAMeio || false; toggleMeioAMeio(configs.meioAMeio || false); }
+  if(mm){ mm.checked = configs.meioAMeio || false; _atualizarVisualMeioAMeio(configs.meioAMeio || false); } // sem save
   // Toggle loja fechada
   const lf = lojaFechada;
   const tb = g('btn-toggle-loja');
