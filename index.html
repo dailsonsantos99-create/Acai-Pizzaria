@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meu Cardápio Digital</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Carrega fontes sem bloquear render (media=print -> onload=all) -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap"></noscript>
 <style>
 :root {
   --bg:        #0d0b12;
@@ -270,6 +274,15 @@ label.field-label{ font-size:11px; font-weight:600; color:var(--muted2); text-tr
 .loading-text{font-size:13px;color:var(--muted2);font-weight:500;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
 @keyframes loading{0%{width:20%;margin-left:0;}50%{width:60%;margin-left:20%;}100%{width:20%;margin-left:80%;}}
+
+/* ── SKELETON ── */
+.skeleton{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--radius);}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-card{height:100px;margin-bottom:10px;}
+.sk-acai{height:160px;border-radius:var(--radius);}
+.sk-header{height:210px;margin-bottom:0;}
+.sk-text{height:14px;border-radius:4px;margin-bottom:8px;}
+.sk-text.short{width:40%;}
 </style>
 <!-- PWA -->
 <meta name="theme-color" content="#0d0b12">
@@ -372,9 +385,27 @@ if ('serviceWorker' in navigator) {
 .rastreio-step.active .rastreio-dot{background:rgba(147,51,234,0.15)!important;border-color:var(--accent)!important;box-shadow:0 0 10px rgba(147,51,234,0.4);}
 </style>
 <div id="loading-screen">
-  <div class="loading-logo">🍕</div>
-  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
-  <div class="loading-text">Carregando cardápio...</div>
+  <!-- Skeleton do header -->
+  <div class="sk-header skeleton" style="width:100%;margin-bottom:0;border-radius:0;"></div>
+  <!-- Skeleton da barra de status -->
+  <div style="height:36px;background:var(--surface);border-bottom:1px solid var(--border);"></div>
+  <!-- Skeleton das tabs -->
+  <div style="display:flex;gap:8px;padding:14px 16px 0;overflow:hidden;">
+    <div class="skeleton" style="width:80px;height:32px;border-radius:100px;flex-shrink:0;"></div>
+    <div class="skeleton" style="width:90px;height:32px;border-radius:100px;flex-shrink:0;"></div>
+    <div class="skeleton" style="width:70px;height:32px;border-radius:100px;flex-shrink:0;"></div>
+  </div>
+  <!-- Skeleton dos cards -->
+  <div style="padding:20px 16px;max-width:460px;margin:0 auto;">
+    <div class="skeleton sk-text" style="width:120px;margin-bottom:16px;"></div>
+    <div class="skeleton sk-card"></div>
+    <div class="skeleton sk-card"></div>
+    <div class="skeleton sk-text" style="width:100px;margin:20px 0 16px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="skeleton sk-acai"></div>
+      <div class="skeleton sk-acai"></div>
+    </div>
+  </div>
 </div>
 <header>
   <div class="banner-wrap">
@@ -1013,8 +1044,32 @@ async function sbFetch(path, opts={}) {
 
 async function carregarDoSupabase() {
   if(!LOJA_ID) { renderMenu(); aplicarMarca(); esconderLoading(); return; }
+
+  // ── Cache local: renderiza instantaneamente enquanto busca dados frescos ──
+  const CACHE_KEY = 'cdp_cache_' + LOJA_ID;
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
   try {
-    const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=*`);
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (cached && (Date.now() - cached.ts) < CACHE_TTL) {
+      configs         = cached.configs        || defaultConfigs;
+      pizzas          = cached.pizzas         || [];
+      acais           = cached.acais          || [];
+      bebidas         = cached.bebidas        || [];
+      listaAdicionais = cached.adicionais     || [];
+      lojaFechada     = cached.loja_fechada   || false;
+      _dadosCarregados = true;
+      renderMenu(); aplicarMarca(); esconderLoading();
+      if (typeof iniciarPWA === 'function') iniciarPWA(configs.name, configs.emojPizzas);
+      // Busca em background para atualizar cache sem travar a UI
+      _atualizarCacheBackground();
+      return;
+    }
+  } catch(e) {}
+
+  // Sem cache — busca normalmente
+  try {
+    // Colunas selecionadas explicitamente: exclui banner/logo em base64 do payload inicial
+    const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=configs,pizzas,acais,bebidas,adicionais,loja_fechada`);
     if (data && data.length > 0) {
       const row = data[0];
       configs          = row.configs         || defaultConfigs;
@@ -1022,9 +1077,10 @@ async function carregarDoSupabase() {
       acais            = row.acais           || [];
       bebidas          = row.bebidas         || [];
       listaAdicionais  = row.adicionais      || [];
-      lojaFechada = row.loja_fechada || false;
+      lojaFechada      = row.loja_fechada    || false;
+      // Salva cache
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...row, ts: Date.now() })); } catch(e) {}
     } else {
-      // primeira vez — cria registro no banco
       await sbFetch('/rest/v1/cardapio', {
         method: 'POST',
         prefer: 'return=minimal',
@@ -1036,14 +1092,28 @@ async function carregarDoSupabase() {
       });
     }
   } catch(e) { console.warn('Erro ao carregar do Supabase:', e); }
-  _dadosCarregados = true; // libera saves a partir daqui
+
+  _dadosCarregados = true;
   renderMenu();
   aplicarMarca();
   esconderLoading();
-  // PWA: atualiza manifest com nome da loja
-  if (typeof iniciarPWA === 'function') {
-    iniciarPWA(configs.name || 'Cardápio Digital', configs.emojPizzas || '🍕');
-  }
+  if (typeof iniciarPWA === 'function') iniciarPWA(configs.name || 'Cardápio Digital', configs.emojPizzas || '🍕');
+}
+
+async function _atualizarCacheBackground() {
+  const CACHE_KEY = 'cdp_cache_' + LOJA_ID;
+  try {
+    const data = await sbFetch(`/rest/v1/cardapio?loja_id=eq.${LOJA_ID}&select=configs,pizzas,acais,bebidas,adicionais,loja_fechada`);
+    if (data && data.length > 0) {
+      const row = data[0];
+      // Atualiza estado somente se loja_fechada mudou (para não causar flicker)
+      if (row.loja_fechada !== lojaFechada) {
+        lojaFechada = row.loja_fechada;
+        if (typeof atualizarStatusLoja === 'function') atualizarStatusLoja();
+      }
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...row, ts: Date.now() })); } catch(e) {}
+    }
+  } catch(e) {}
 }
 
 async function salvarNoSupabase(tentativa = 1) {
@@ -1052,6 +1122,8 @@ async function salvarNoSupabase(tentativa = 1) {
     console.warn('⚠️ Save bloqueado: dados ainda não carregados do banco');
     return;
   }
+  // Invalida cache local para próxima visita buscar dados frescos
+  try { localStorage.removeItem('cdp_cache_' + LOJA_ID); } catch(e) {}
   const payload = {
     loja_id: LOJA_ID,
     configs, pizzas, acais, bebidas,
@@ -1307,7 +1379,7 @@ function renderMenu(){
 
   document.getElementById("pizzas-list").innerHTML=pizzas.map((p,i)=>
     `<div class="card" style="animation-delay:${i*0.04}s" data-nome="${p.name}" data-desc="${p.desc||''}">
-      <img class="card-img" src="${p.img||getPizzaImg(p.id)}" onerror="this.src=SVG_FB_PIZZA" alt="${p.name}">
+      <img class="card-img" loading="lazy" src="${p.img||getPizzaImg(p.id)}" onerror="this.src=SVG_FB_PIZZA" alt="${p.name}">
       <div class="card-body">
         <div>
           <div class="card-title">${p.name}</div>
@@ -1322,7 +1394,7 @@ function renderMenu(){
 
   document.getElementById("acais-grid").innerHTML=acais.map((a,i)=>
     `<div class="acai-card" style="animation-delay:${i*0.05}s" data-nome="${a.name}">
-      <img src="${a.img||getAcaiImg(a.id)}" onerror="this.src=SVG_FB_ACAI" alt="${a.name}">
+      <img loading="lazy" src="${a.img||getAcaiImg(a.id)}" onerror="this.src=SVG_FB_ACAI" alt="${a.name}">
       <div class="acai-name">${a.name}</div>
       <div class="acai-badge">${a.limit} adicionais</div>
       <div class="acai-price">${fmt(a.price)}</div>
@@ -1331,7 +1403,7 @@ function renderMenu(){
 
   document.getElementById("bebidas-list").innerHTML=bebidas.map((b,i)=>
     `<div class="card" style="animation-delay:${i*0.04}s" data-nome="${b.name}" data-desc="${b.desc||''}">
-      <img class="card-img" src="${b.img||getBebidaImg(b.id)}" onerror="this.src=SVG_FB_BEB" alt="${b.name}">
+      <img class="card-img" loading="lazy" src="${b.img||getBebidaImg(b.id)}" onerror="this.src=SVG_FB_BEB" alt="${b.name}">
       <div class="card-body">
         <div>
           <div class="card-title">${b.name}</div>
