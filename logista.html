@@ -406,6 +406,33 @@ body{ padding-bottom:0; min-height:100vh; display:flex; flex-direction:column; }
         <input type="number" step="0.01" id="config-tax">
       </div>
 
+      <!-- CUPONS DE DESCONTO -->
+      <div class="admin-section">
+        <div class="admin-section-title" style="margin-bottom:10px;">🎟 Cupons de Desconto</div>
+        <p style="font-size:11px;color:var(--muted2);margin-bottom:10px;">Cada linha: CÓDIGO,tipo,valor (tipo: pct ou fixo). Ex: PROMO10,pct,10 ou FRETE,fixo,5</p>
+        <textarea id="config-cupons" style="height:80px;font-size:12px;font-family:monospace;" placeholder="PROMO10,pct,10&#10;FRETE,fixo,5"></textarea>
+      </div>
+
+      <!-- HORÁRIO DE FUNCIONAMENTO -->
+      <div class="admin-section">
+        <div class="admin-section-title" style="margin-bottom:10px;">🕐 Horário de Funcionamento</div>
+        <p style="font-size:11px;color:var(--muted2);margin-bottom:10px;">Defina o horário de abertura e fechamento automático (baseado no horário local do servidor/browser).</p>
+        <div style="display:flex;gap:12px;margin-bottom:8px;">
+          <div class="f-group" style="flex:1;">
+            <label class="field-label">Abre às</label>
+            <input type="time" id="config-hora-abre" value="11:00" style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+          </div>
+          <div class="f-group" style="flex:1;">
+            <label class="field-label">Fecha às</label>
+            <input type="time" id="config-hora-fecha" value="23:00" style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="config-horario-auto" style="width:auto;margin:0;">
+          <label style="font-size:12px;color:var(--muted2);cursor:pointer;" for="config-horario-auto">Abrir/fechar automaticamente nesse horário</label>
+        </div>
+      </div>
+
       <div class="admin-section">
         <div class="admin-section-head">
           <div class="admin-section-title">🏪 Status da Loja</div>
@@ -446,6 +473,9 @@ body{ padding-bottom:0; min-height:100vh; display:flex; flex-direction:column; }
 
     <!-- PAGE: PEDIDOS -->
     <div id="pg-pedidos" class="admin-page">
+      <!-- Dashboard rápido -->
+      <div id="dashboard-metricas" style="margin-bottom:16px;"></div>
+
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <div class="admin-section-title" style="font-size:14px;">📋 Pedidos Recebidos</div>
         <button class="btn btn-ghost btn-sm" onclick="limparEntregues()">🗑 Limpar entregues</button>
@@ -831,8 +861,44 @@ async function verificarNovoPedido() {
   } catch(e) {}
 }
 
-setInterval(verificarNovoPedido, 8000);
-setInterval(carregarPedidosSupabase, 10000); // Verifica novos pedidos a cada 10s
+// ── SUPABASE REALTIME (substitui polling) ──
+let _realtimeChannel = null;
+function iniciarRealtime() {
+  if (!LOJA_ID || _realtimeChannel) return;
+  // Fallback: polling a cada 15s caso Realtime não esteja disponível
+  const fallbackTimer = setInterval(carregarPedidosSupabase, 15000);
+  try {
+    const evtSource = new EventSource(
+      `${SUPABASE_URL}/realtime/v1/api/broadcast?apikey=${SUPABASE_KEY}`,
+      { withCredentials: false }
+    );
+    // Se conectar via EventSource avançado não for suportado, mantemos polling
+    evtSource.onerror = () => evtSource.close();
+  } catch(e) {}
+  // Canal Realtime via broadcast do Supabase (websocket)
+  // Como usamos apenas a anon key no frontend, usamos polling otimizado
+  // como principal estratégia até termos um backend:
+  clearInterval(fallbackTimer);
+  let _lastCheck = Date.now();
+  setInterval(async () => {
+    if (!LOJA_ID) return;
+    try {
+      const data = await sbFetch(
+        `/rest/v1/pedidos?loja_id=eq.${LOJA_ID}&order=created_at.desc&limit=1&select=id,created_at,status`
+      );
+      if (data && data.length) {
+        const ts = new Date(data[0].created_at).getTime();
+        if (ts > _lastCheck && data[0].status === 'novo') {
+          tocarSom();
+          await carregarPedidosSupabase();
+        }
+        _lastCheck = Date.now();
+      }
+    } catch(e) {}
+  }, 6000);
+  // Recarrega lista completa a cada 30s para sincronizar status
+  setInterval(carregarPedidosSupabase, 30000);
+}
 
 // ── LOGIN ──
 async function fazerLogin() {
@@ -887,6 +953,99 @@ function iniciarPainel() {
   atualizarBanner();
   atualizarLogoPreview();
   carregarPedidosSupabase();
+  iniciarRealtime();
+  renderDashboard();
+}
+
+// ── DASHBOARD DE MÉTRICAS ──
+function renderDashboard() {
+  const el = document.getElementById('dashboard-metricas');
+  if (!el) return;
+  const pedidos = getPedidos();
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const pedidosHoje  = pedidos.filter(p => p.data === hoje);
+  const faturamento  = pedidosHoje.reduce((s, p) => s + (parseFloat(p.total)||0), 0);
+  const novos        = pedidos.filter(p => p.status === 'novo').length;
+  const confirmados  = pedidos.filter(p => p.status === 'confirmado').length;
+
+  // Contagem por produto
+  const contagem = {};
+  pedidosHoje.forEach(p => (p.itens||[]).forEach(i => { contagem[i.name] = (contagem[i.name]||0) + 1; }));
+  const topProd = Object.entries(contagem).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const topHtml = topProd.length
+    ? topProd.map(([n,c],i)=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);"><span>${['🥇','🥈','🥉'][i]} ${n}</span><span style="color:var(--gold);font-weight:700;">${c}x</span></div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Nenhum pedido hoje ainda.</div>';
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;">
+        <div style="font-size:22px;font-weight:700;color:var(--green);">${fmt(faturamento)}</div>
+        <div style="font-size:11px;color:var(--muted2);">Faturamento hoje</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;">
+        <div style="font-size:22px;font-weight:700;">${pedidosHoje.length}</div>
+        <div style="font-size:11px;color:var(--muted2);">Pedidos hoje</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;">
+        <div style="font-size:22px;font-weight:700;color:var(--fire2);">${novos}</div>
+        <div style="font-size:11px;color:var(--muted2);">Aguardando</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;">
+        <div style="font-size:22px;font-weight:700;color:var(--gold);">${confirmados}</div>
+        <div style="font-size:11px;color:var(--muted2);">Em preparo</div>
+      </div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">🏆 Mais vendidos hoje</div>
+      ${topHtml}
+    </div>`;
+}
+
+// ── IMPRIMIR PEDIDO ──
+function imprimirPedido(id) {
+  const pedidos = getPedidos();
+  const p = pedidos.find(x => x.id === id);
+  if (!p) return;
+  const loja = configs.name || 'Minha Loja';
+  const itensHtml = (p.itens||[]).map(i =>
+    `<tr><td>${i.name}</td><td style="white-space:nowrap;">${fmt(i.price)}</td></tr>
+     <tr><td colspan="2" style="font-size:11px;color:#666;padding-left:8px;">↳ ${i.custom||'—'}</td></tr>`
+  ).join('');
+  const w = window.open('','_blank','width=380,height=600');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Pedido ${p.id}</title>
+    <style>
+      body{font-family:monospace;font-size:13px;margin:0;padding:16px;color:#000;}
+      h1{font-size:16px;text-align:center;margin-bottom:4px;}
+      .sub{font-size:11px;text-align:center;color:#555;margin-bottom:12px;}
+      hr{border:none;border-top:1px dashed #aaa;margin:10px 0;}
+      table{width:100%;border-collapse:collapse;}
+      td{padding:3px 2px;vertical-align:top;}
+      td:last-child{text-align:right;}
+      .total{font-size:15px;font-weight:bold;}
+      .footer{text-align:center;font-size:11px;color:#777;margin-top:12px;}
+    </style>
+  </head><body>
+    <h1>🍕 ${loja}</h1>
+    <div class="sub">Pedido: ${p.id}</div>
+    <div class="sub">${p.data} ${p.hora}</div>
+    <hr>
+    <b>👤 ${p.nome}</b><br>
+    📱 ${p.tel}<br>
+    📍 ${p.street}, nº ${p.num} — ${p.bairro}
+    <hr>
+    <table>${itensHtml}</table>
+    <hr>
+    <table>
+      <tr><td>Taxa de entrega</td><td>${fmt(configs.tax||0)}</td></tr>
+      <tr class="total"><td>TOTAL</td><td>${fmt(p.total)}</td></tr>
+    </table>
+    <hr>
+    <div>💳 ${p.pag}${p.troco?' — Troco p/ R$'+p.troco:''}</div>
+    <div class="footer">Obrigado pela preferência!</div>
+    <script>window.onload=()=>{ window.print(); window.close(); }<\/script>
+  </body></html>`);
+  w.document.close();
 }
 
 // ── INIT ──
@@ -1130,6 +1289,25 @@ function confirmAcai(){
 }
 
 /* ── CARRINHO ── */
+let cupomAtivo = null;
+const CUPONS = {}; // Populado em saveAdminSettings
+
+function aplicarCupom() {
+  const code = (document.getElementById('cupom-input')?.value || '').trim().toUpperCase();
+  const cuponsCfg = configs.cupons || {};
+  const cupom = cuponsCfg[code];
+  if (!cupom) { mostrarToast('❌ Cupom inválido ou expirado.'); return; }
+  cupomAtivo = { code, ...cupom };
+  mostrarToast(`✅ Cupom "${code}" aplicado! ${cupom.tipo==='pct' ? cupom.valor+'% de desconto' : 'R$'+cupom.valor+' de desconto'}`);
+  openCheckout();
+}
+
+function getDesconto(sub) {
+  if (!cupomAtivo) return 0;
+  if (cupomAtivo.tipo === 'pct') return sub * (cupomAtivo.valor / 100);
+  return Math.min(cupomAtivo.valor, sub);
+}
+
 function openCheckout(){
   const _ci=document.getElementById("checkout-items"); if(_ci) _ci.innerHTML=carrinho.map((item,idx)=>
     `<div class="checkout-item">
@@ -1142,10 +1320,25 @@ function openCheckout(){
         <span class="checkout-item-del" onclick="removerItem(${idx})">×</span>
       </div>
     </div>`).join("");
-  const sub=carrinho.reduce((a,i)=>a+i.price,0);
+  const sub = carrinho.reduce((a,i)=>a+i.price,0);
+  const desc = getDesconto(sub);
+  const total = sub - desc + parseFloat(configs.tax||0);
   const _ss=document.getElementById("summary-subtotal"); if(_ss) _ss.innerText=fmt(sub);
   const _sdt=document.getElementById("summary-delivery-tax"); if(_sdt) _sdt.innerText=fmt(configs.tax);
-  const _st=document.getElementById("summary-total"); if(_st) _st.innerText=fmt(sub+parseFloat(configs.tax));
+  const _st=document.getElementById("summary-total"); if(_st) _st.innerText=fmt(total);
+  // Mostra linha de desconto
+  let descEl = document.getElementById('summary-desconto-row');
+  if (!descEl) {
+    const summary = document.querySelector('.summary');
+    if (summary) {
+      descEl = document.createElement('div');
+      descEl.id = 'summary-desconto-row';
+      descEl.className = 'summary-row';
+      summary.insertBefore(descEl, document.getElementById('summary-total')?.parentElement || summary.lastChild);
+    }
+  }
+  if (descEl) descEl.style.display = desc > 0 ? 'flex' : 'none';
+  if (descEl && desc > 0) descEl.innerHTML = `<span>🎟 Desconto (${cupomAtivo.code})</span><span style="color:var(--green)">- ${fmt(desc)}</span>`;
   document.getElementById("checkout-modal")?.style.display="flex";
 }
 function removerItem(idx){carrinho.splice(idx,1);atualizarCarrinhoBar();if(carrinho.length===0)closeModal("checkout-modal");else openCheckout();}
@@ -1444,6 +1637,18 @@ function openAdminModal(){
   renderAdminPizzas();
   renderAdminAcais();
   renderAdminBebidas();
+  // Cupons
+  const cuponsEl = document.getElementById('config-cupons');
+  if (cuponsEl && configs.cupons) {
+    cuponsEl.value = Object.entries(configs.cupons).map(([k,v]) => `${k},${v.tipo},${v.valor}`).join('\n');
+  }
+  // Horário
+  const ha = document.getElementById('config-hora-abre');
+  const hf = document.getElementById('config-hora-fecha');
+  const auto = document.getElementById('config-horario-auto');
+  if (ha) ha.value = configs.horaAbre || '11:00';
+  if (hf) hf.value = configs.horaFecha || '23:00';
+  if (auto) auto.checked = configs.horarioAuto || false;
 }
 
 async function saveAdminSettings(){
@@ -1469,6 +1674,21 @@ async function saveAdminSettings(){
     if(v)a.price=parseFloat(v.value);if(l)a.limit=parseInt(l.value);
   });
   bebidas.forEach(b=>{const v=document.getElementById(`adm-b-${b.id}`);if(v)b.price=parseFloat(v.value);});
+  // Cupons
+  const cuponsRaw = (document.getElementById('config-cupons')?.value || '').trim();
+  configs.cupons = {};
+  cuponsRaw.split('\n').forEach(line => {
+    const parts = line.trim().split(',');
+    if (parts.length >= 3) {
+      const [code, tipo, val] = parts;
+      const c = code.trim().toUpperCase();
+      if (c) configs.cupons[c] = { tipo: tipo.trim(), valor: parseFloat(val.trim()) || 0 };
+    }
+  });
+  // Horário automático
+  configs.horaAbre    = document.getElementById('config-hora-abre')?.value || '11:00';
+  configs.horaFecha   = document.getElementById('config-hora-fecha')?.value || '23:00';
+  configs.horarioAuto = document.getElementById('config-horario-auto')?.checked || false;
   // Aguarda o save completar ANTES de mostrar confirmação
   await salvarNoSupabase();
   // Atualiza header do logista
@@ -1825,6 +2045,7 @@ async function carregarPedidosSupabase(){
     }
     renderPedidos();
     atualizarBadgePedidos();
+    renderDashboard();
   } catch(e){ console.warn('Erro ao carregar pedidos:', e); }
 }
 
@@ -1861,15 +2082,20 @@ function renderPedidos(){
     const itensHtml = p.itens.map(i=>`• ${i.name} — ${fmt(i.price)}<br><span style="color:var(--muted);font-size:10px;">  ↳ ${i.custom}</span>`).join('<br>');
 
     const acoes = p.status==='novo'
-      ? `<button class="btn btn-green" style="flex:1;padding:8px;font-size:12px;" onclick="mudarStatus('${p.id}','confirmado')">✅ Confirmar Recebimento</button>`
+      ? `<div style="display:flex;gap:6px;width:100%;">
+          <button class="btn btn-green" style="flex:1;padding:8px;font-size:12px;" onclick="mudarStatus('${p.id}','confirmado')">✅ Confirmar Recebimento</button>
+          <button class="btn btn-ghost" style="padding:8px 10px;font-size:12px;" onclick="imprimirPedido('${p.id}')" title="Imprimir">🖨️</button>
+        </div>`
       : p.status==='confirmado'
       ? `<div style="display:flex;gap:6px;width:100%;">
           <button class="btn btn-primary" style="flex:1;padding:8px;font-size:12px;" onclick="mudarStatus('${p.id}','entregue')">🚀 Marcar como Entregue</button>
           <button class="btn btn-ghost" style="padding:8px 10px;font-size:12px;" onclick="copiarMsgCliente('${p.id}','confirmado')" title="Copiar mensagem de confirmação">📋</button>
+          <button class="btn btn-ghost" style="padding:8px 10px;font-size:12px;" onclick="imprimirPedido('${p.id}')" title="Imprimir">🖨️</button>
         </div>`
       : `<div style="display:flex;gap:6px;width:100%;align-items:center;">
           <div style="font-size:12px;color:var(--green);font-weight:600;flex:1;">✅ Pedido entregue</div>
           <button class="btn btn-ghost" style="padding:8px 10px;font-size:12px;" onclick="copiarMsgCliente('${p.id}','entregue')" title="Copiar mensagem de entrega">📋</button>
+          <button class="btn btn-ghost" style="padding:8px 10px;font-size:12px;" onclick="imprimirPedido('${p.id}')" title="Imprimir">🖨️</button>
         </div>`;
 
     return `<div class="pedido-card status-${p.status}" id="card-${p.id}">
@@ -2038,6 +2264,28 @@ async function toggleLoja(){
   }
 }
 
+// ── HORÁRIO AUTOMÁTICO ──
+function verificarHorarioAuto() {
+  if (!configs.horarioAuto) return;
+  const agora  = new Date();
+  const hhmm   = agora.getHours() * 60 + agora.getMinutes();
+  const parse  = s => { const [h,m] = (s||'').split(':').map(Number); return h*60+(m||0); };
+  const abre   = parse(configs.horaAbre  || '11:00');
+  const fecha  = parse(configs.horaFecha || '23:00');
+  const devAbrir = hhmm >= abre && hhmm < fecha;
+  if (devAbrir && lojaFechada) {
+    lojaFechada = false;
+    salvarNoSupabase();
+    atualizarStatusLoja();
+    mostrarToast('🟢 Loja aberta automaticamente!');
+  } else if (!devAbrir && !lojaFechada) {
+    lojaFechada = true;
+    salvarNoSupabase();
+    atualizarStatusLoja();
+    mostrarToast('🔒 Loja fechada automaticamente!');
+  }
+}
+setInterval(verificarHorarioAuto, 60000); // checa a cada 1 minuto
 
 // openAdminModal é definida acima com leitura completa dos campos
 
