@@ -1042,11 +1042,11 @@ function fmt(n){return'R$ '+parseFloat(n).toFixed(2).replace('.',',');}
 
 async function atualizarBadgePizza(id, badge){
   pizzas = pizzas.map(p => p.id===id ? {...p, badge} : p);
-  renderAdminPizzas(); renderMenu(); await salvarNoSupabase();
+  renderMenu(); await salvarNoSupabase();
 }
 async function atualizarBadgeBebida(id, badge){
   bebidas = bebidas.map(b => b.id===id ? {...b, badge} : b);
-  renderAdminBebidas(); renderMenu(); await salvarNoSupabase();
+  renderMenu(); await salvarNoSupabase();
 }
 function renderBadge(badge){
   if(!badge) return '';
@@ -1314,7 +1314,7 @@ async function trocarImgPizza(id){
   inp.onchange=async()=>{
     const b64 = await comprimirImagem(inp.files[0], 600, 0.75);
     pizzas=pizzas.map(p=>p.id===id?{...p,img:b64}:p);
-    renderAdminPizzas(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
+    renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
   inp.click();
 }
@@ -1323,7 +1323,7 @@ async function trocarImgAcai(id){
   inp.onchange=async()=>{
     const b64 = await comprimirImagem(inp.files[0], 600, 0.75);
     acais=acais.map(a=>a.id===id?{...a,img:b64}:a);
-    renderAdminAcais(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
+    renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
   inp.click();
 }
@@ -1332,7 +1332,7 @@ async function trocarImgBebida(id){
   inp.onchange=async()=>{
     const b64 = await comprimirImagem(inp.files[0], 600, 0.75);
     bebidas=bebidas.map(b=>b.id===id?{...b,img:b64}:b);
-    renderAdminBebidas(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
+    renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
   inp.click();
 }
@@ -1462,7 +1462,7 @@ async function adicionarPizza(){
   pizzas.push({id:"p_"+Date.now(),name:n,prices:{M:m,G:g},desc:d||"Sabor especial.",badge});
     ["new-pizza-name","new-pizza-desc","new-pizza-priceM","new-pizza-priceG"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("new-pizza-badge").value="";
-  toggleFormBox("pizza-form-box");renderAdminPizzas();renderMenu();
+  toggleFormBox("pizza-form-box");renderMenu();
   await salvarNoSupabase();
   mostrarToast('✅ Pizza salva!');
 }
@@ -1473,7 +1473,7 @@ async function adicionarAcai(){
   if(!n||!p)return alert("Preencha Nome e Preço!");
   acais.push({id:"a_"+Date.now(),name:n,price:p,limit:l});
     ["new-acai-name","new-acai-price"].forEach(id=>document.getElementById(id).value="");
-  toggleFormBox("acai-form-box");renderAdminAcais();renderMenu();
+  toggleFormBox("acai-form-box");renderMenu();
   await salvarNoSupabase();
   mostrarToast('✅ Açaí salvo!');
 }
@@ -1486,7 +1486,7 @@ async function adicionarBebidaAdmin(){
   bebidas.push({id:"b_"+Date.now(),name:n,price:p,desc:d||"",badge:bdg});
     ["new-bebida-name","new-bebida-desc","new-bebida-price"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("new-bebida-badge").value="";
-  toggleFormBox("bebida-form-box");renderAdminBebidas();renderMenu();
+  toggleFormBox("bebida-form-box");renderMenu();
   await salvarNoSupabase();
   mostrarToast('✅ Bebida salva!');
 }
@@ -1538,9 +1538,9 @@ async function toggleMeioAMeio(val){
   mostrarToast('✅ Seções atualizadas!');
   await salvarNoSupabase();
 }
-async function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>p.id!==id);renderAdminPizzas();renderMenu();await salvarNoSupabase();mostrarToast('🗑 Pizza removida.');}}
-async function deletarAcai(id){if(confirm("Remover açaí?")){acais=acais.filter(a=>a.id!==id);renderAdminAcais();renderMenu();await salvarNoSupabase();mostrarToast('🗑 Açaí removido.');}}
-async function deletarBebida(id){if(confirm("Remover bebida?")){bebidas=bebidas.filter(b=>b.id!==id);renderAdminBebidas();renderMenu();await salvarNoSupabase();mostrarToast('🗑 Bebida removida.');}}
+async function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>p.id!==id);renderMenu();await salvarNoSupabase();mostrarToast('🗑 Pizza removida.');}}
+async function deletarAcai(id){if(confirm("Remover açaí?")){acais=acais.filter(a=>a.id!==id);renderMenu();await salvarNoSupabase();mostrarToast('🗑 Açaí removido.');}}
+async function deletarBebida(id){if(confirm("Remover bebida?")){bebidas=bebidas.filter(b=>b.id!==id);renderMenu();await salvarNoSupabase();mostrarToast('🗑 Bebida removida.');}}
 
 async function saveAdminSettings(){
   configs.name=document.getElementById("config-name1").value.trim()||"Açaí+";
@@ -1706,19 +1706,18 @@ function atualizarBanner(){
     if(previewText)previewText.style.display='block';
   }
 }
-function trocarLogo(){
-  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-  inp.onchange=async()=>{
-    const r=new FileReader();
-    inp.onchange=async()=>{
-    const b64=await comprimirImagem(inp.files[0],300,0.80);
-    configs.logo=b64;
-      aplicarMarca();
-      atualizarLogoPreview();
-      await salvarNoSupabase();
-      mostrarToast('✅ Logo salva!');
-    };
-    r.readAsDataURL(inp.files[0]);
+async function trocarLogo(){
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = async () => {
+    if(!inp.files[0]) return;
+    const b64 = await comprimirImagem(inp.files[0], 300, 0.80);
+    configs.logo = b64;
+    aplicarMarca();
+    atualizarLogoPreview();
+    await salvarNoSupabase();
+    mostrarToast('✅ Logo salva!');
   };
   inp.click();
 }
@@ -1800,7 +1799,7 @@ async function alterarSenha(){
   document.getElementById('senha-nova').value='';
   document.getElementById('senha-confirma').value='';
   document.getElementById('senha-strength').style.background='var(--border2)';
-  alert('✅ Senha alterada com sucesso!');
+  mostrarToast('✅ Senha alterada!');
 }
 
 /* ── RESET ── */
@@ -1810,7 +1809,7 @@ async function resetarSistema(){
   configs=Object.assign({},defaultConfigs);
   pizzas=[];acais=[];bebidas=[];listaAdicionais=defaultAdicionais;lojaFechada=false;
   await salvarNoSupabase();
-  alert('✅ Sistema resetado! A página será recarregada.');
+  mostrarToast('✅ Sistema resetado! Recarregando...');
   location.reload();
 }
 
@@ -2125,9 +2124,9 @@ async function toggleLoja(){
   await salvarNoSupabase();
   atualizarStatusLoja();
   if(novoStatus){
-    alert('🔒 Loja fechada! Os clientes não conseguirão finalizar pedidos.');
+    mostrarToast('🔒 Loja fechada!');
   } else {
-    alert('✅ Loja aberta! Pedidos liberados.');
+    mostrarToast('✅ Loja aberta!');
   }
 }
 </script>
