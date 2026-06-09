@@ -1363,10 +1363,11 @@ function openCheckout(){
   }
   if (descEl) descEl.style.display = desc > 0 ? 'flex' : 'none';
   if (descEl && desc > 0) descEl.innerHTML = `<span>🎟 Desconto (${cupomAtivo.code})</span><span style="color:var(--green)">- ${fmt(desc)}</span>`;
-  document.getElementById("checkout-modal")?.style.display="flex";
+  const chkModal = document.getElementById("checkout-modal");
+  if (chkModal) chkModal.style.display = "flex";
 }
 function removerItem(idx){carrinho.splice(idx,1);atualizarCarrinhoBar();if(carrinho.length===0)closeModal("checkout-modal");else openCheckout();}
-function toggleTroco(v){document.getElementById("troco-wrapper")?.style.display=v==="Dinheiro"?"block":"none";}
+function toggleTroco(v){const _tw=document.getElementById("troco-wrapper");if(_tw)_tw.style.display=v==="Dinheiro"?"block":"none";}
 function closeModal(id){document.getElementById(id).style.display="none";}
 function buscarCEP(cep){
   const v=cep.replace(/\D/g,"");
@@ -1522,7 +1523,7 @@ function accessAdmin(){
   showAdminPage("pg-loja", document.querySelector(".admin-tab"));
   const nomeLabel = document.getElementById('admin-loja-nome');
   if(nomeLabel) nomeLabel.textContent = (configs.name||'') + ' ' + (configs.nameSecondary||'');
-  document.getElementById("admin-modal")?.style.display="flex";
+  const _am=document.getElementById("admin-modal");if(_am)_am.style.display="flex";
   atualizarBadgePedidos();
 }
 
@@ -1752,8 +1753,8 @@ async function enviarPedido(){
   window.open(`https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`, '_blank');
   closeModal("checkout-modal");
   if(pag==="PIX"){const _pk=document.getElementById("pix-key-text"); if(_pk) _pk.innerText=configs.pix; const _pdb=document.getElementById("pix-display-box"); if(_pdb) _pdb.style.display="block";}
-  else document.getElementById("pix-display-box")?.style.display="none";
-  document.getElementById("success-modal")?.style.display="flex";
+  else { const _pb=document.getElementById("pix-display-box");if(_pb)_pb.style.display="none"; }
+  const _sm=document.getElementById("success-modal");if(_sm)_sm.style.display="flex";
   // Registra pedido no histórico do lojista
   await registrarPedido({
     nome, phone, street, num, bairro, pag,
