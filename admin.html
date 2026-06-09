@@ -20,6 +20,7 @@
   --muted2:#9b96b0;
   --green:#22c55e;
   --red:#ef4444;
+  --gold:#f59e0b;
   --radius:16px;
   --radius-sm:10px;
 }
@@ -42,25 +43,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* PAINEL */
 #painel{display:none;min-height:100vh;width:100%;align-items:flex-start;justify-content:center;padding:40px 20px}
-.container{width:100%;max-width:760px}
+.container{width:100%;max-width:820px}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
-.header-left{display:flex;align-items:center;gap:12px}
 .logo-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:100px;padding:6px 16px 6px 6px}
 .logo-dot{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#c026d3);display:flex;align-items:center;justify-content:center;font-size:15px}
 .logo-pill span{font-size:13px;font-weight:600;color:rgba(255,255,255,0.8)}
 .btn-logout{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 16px;color:var(--muted2);font-size:13px;font-family:inherit;cursor:pointer;transition:.2s}
 .btn-logout:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
-
 .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:12px}
 
 /* FORM NOVO CLIENTE */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
 .card-title{font-size:16px;font-weight:700;margin-bottom:20px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
 .f-group{display:flex;flex-direction:column;gap:6px}
 .f-group label{font-size:12px;color:var(--muted2);font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
-.f-group input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:.2s}
-.f-group input:focus{border-color:var(--accent)}
+.f-group input,.f-group select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:.2s}
+.f-group input:focus,.f-group select:focus{border-color:var(--accent)}
+.f-group select option{background:var(--surface2)}
 .btn-gerar{background:linear-gradient(135deg,var(--accent),#c026d3);border:none;border-radius:var(--radius-sm);padding:12px 24px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:.2s}
 .btn-gerar:hover{opacity:0.9}
 
@@ -78,16 +79,36 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .client-info{flex:1;min-width:0}
 .client-name{font-size:15px;font-weight:600}
 .client-slug{font-size:12px;color:var(--muted2);font-family:monospace;margin-top:2px}
+.client-meta{font-size:11px;color:var(--muted);margin-top:3px}
 .badge-ativo{font-size:11px;padding:3px 10px;border-radius:100px;background:rgba(34,197,94,0.12);color:var(--green);font-weight:600;flex-shrink:0}
-.row-btns{display:flex;gap:8px}
-.btn-sm{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted2);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s}
+.badge-vencendo{font-size:11px;padding:3px 10px;border-radius:100px;background:rgba(245,158,11,0.15);color:var(--gold);font-weight:600;flex-shrink:0}
+.badge-vencido{font-size:11px;padding:3px 10px;border-radius:100px;background:rgba(239,68,68,0.12);color:var(--red);font-weight:600;flex-shrink:0}
+.row-btns{display:flex;gap:8px;flex-shrink:0}
+.btn-sm{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted2);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s;white-space:nowrap}
 .btn-sm:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
 .btn-sm.danger:hover{color:var(--red);border-color:var(--red)}
 .empty{text-align:center;padding:32px;color:var(--muted);font-size:14px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 20px}
 .stat-num{font-size:28px;font-weight:700}
+.stat-num.red{color:var(--red)}
+.stat-num.gold{color:var(--gold)}
 .stat-label{font-size:12px;color:var(--muted2);margin-top:2px}
+
+/* TOOLBAR LISTA */
+.list-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.search-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;flex:1;min-width:160px;transition:.2s}
+.search-input:focus{border-color:var(--accent)}
+.btn-export{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;color:var(--muted2);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s;white-space:nowrap}
+.btn-export:hover{color:var(--text);border-color:rgba(255,255,255,0.2)}
+.filter-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--muted2);font-size:12px;font-family:inherit;outline:none;cursor:pointer}
+.filter-select option{background:var(--surface2)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 18px;font-size:13px;color:var(--text);z-index:999;display:none;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
 </style>
 </head>
 <body>
@@ -104,11 +125,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="field">
       <label>Usuário</label>
-      <input type="text" id="inp-user" placeholder="Digite seu usuário" />
+      <input type="text" id="inp-user" placeholder="Digite seu usuário" autocomplete="username" />
     </div>
     <div class="field">
       <label>Senha</label>
-      <input type="password" id="inp-pass" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter')login()" />
+      <input type="password" id="inp-pass" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()" />
     </div>
     <button class="btn-login" onclick="login()">Entrar</button>
     <div class="login-error" id="login-error">Usuário ou senha incorretos.</div>
@@ -139,6 +160,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="stat-num" id="stat-mes">0</div>
         <div class="stat-label">Neste mês</div>
       </div>
+      <div class="stat">
+        <div class="stat-num red" id="stat-vencendo">0</div>
+        <div class="stat-label">Vencendo em 7 dias</div>
+      </div>
     </div>
 
     <div class="card">
@@ -151,6 +176,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="f-group">
           <label>ID do link</label>
           <input type="text" id="inp-slug" placeholder="Ex: pizzaria-joao" oninput="slugManual=true" />
+        </div>
+      </div>
+      <div class="form-grid-3">
+        <div class="f-group">
+          <label>Plano</label>
+          <select id="inp-plano">
+            <option value="mensal">Mensal</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="anual">Anual</option>
+          </select>
+        </div>
+        <div class="f-group">
+          <label>Vencimento</label>
+          <input type="date" id="inp-vencimento" />
+        </div>
+        <div class="f-group">
+          <label>WhatsApp do cliente</label>
+          <input type="text" id="inp-wpp" placeholder="84999999999" maxlength="11" />
         </div>
       </div>
       <button class="btn-gerar" onclick="gerarCliente()">Gerar link do cliente</button>
@@ -175,27 +218,64 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
 
     <div class="card">
-      <div class="section-title">Clientes cadastrados</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:0">Clientes cadastrados</div>
+        <button class="btn-export" onclick="exportarCSV()">⬇️ Exportar CSV</button>
+      </div>
+      <div class="list-toolbar">
+        <input class="search-input" type="text" id="busca-cliente" placeholder="🔍 Buscar cliente..." oninput="renderLista()" />
+        <select class="filter-select" id="filtro-status" onchange="renderLista()">
+          <option value="todos">Todos</option>
+          <option value="ativo">Ativos</option>
+          <option value="vencendo">Vencendo</option>
+          <option value="vencido">Vencido</option>
+        </select>
+      </div>
       <div id="lista"></div>
     </div>
   </div>
 </div>
 
-<script>
-const USER = 'Admin';
-const MASTER_PASS = '190614';
-function checkAdminPass(p) { return p === MASTER_PASS; }
-const BASE_LOGISTA = 'https://acai-pizzaria.vercel.app/logista.html';
-const BASE_CARDAPIO = 'https://acai-pizzaria.vercel.app';
-const BASE = BASE_LOGISTA;
-const SUPABASE_URL = 'https://lhxanhakrrxlbjuazikk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
-// Estado de autenticação apenas em memória (sessionStorage limpo ao fechar o browser — aceitável)
-let adminLogado = false;
-let slugManual = false;
-let clientes = [];
+<div class="toast" id="toast"></div>
 
-// ── SUPABASE HELPERS ──
+<script>
+// ── CONFIGURAÇÕES ──
+// ATENÇÃO: mova SUPABASE_KEY para uma Vercel Function quando possível.
+// Enquanto isso, use RLS no Supabase para limitar o que a anon key pode fazer.
+const BASE_LOGISTA  = 'https://acai-pizzaria.vercel.app/logista.html';
+const BASE_CARDAPIO = 'https://acai-pizzaria.vercel.app';
+const SUPABASE_URL  = 'https://lhxanhakrrxlbjuazikk.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoeGFuaGFrcnJ4bGJqdWF6aWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTYzMjcsImV4cCI6MjA5NjE3MjMyN30.rTk2KHveVufi0KgeZAGhkq7Ephzu2n1mL-oXiwrV5LQ';
+
+// Credenciais do admin — nunca em texto puro em produção.
+// Ideal: Supabase Auth ou verificação server-side.
+const ADMIN_USER = 'Admin';
+const ADMIN_PASS_HASH = btoa('190614'); // ofuscação mínima; migre para Supabase Auth
+
+let adminLogado = false;
+let slugManual  = false;
+let clientes    = [];
+
+// ── HELPERS ──
+function mostrarToast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.display = 'none'; }, dur);
+}
+
+function statusVencimento(vencimento) {
+  if (!vencimento) return { label: 'Ativo', classe: 'badge-ativo' };
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const v = new Date(vencimento + 'T00:00:00');
+  const diff = Math.ceil((v - hoje) / 86400000);
+  if (diff < 0)  return { label: 'Vencido',        classe: 'badge-vencido'   };
+  if (diff <= 7) return { label: `Vence em ${diff}d`, classe: 'badge-vencendo' };
+  return { label: 'Ativo', classe: 'badge-ativo' };
+}
+
+// ── SUPABASE ──
 async function sbFetch(path, opts={}) {
   const res = await fetch(SUPABASE_URL + path, {
     ...opts,
@@ -213,26 +293,36 @@ async function sbFetch(path, opts={}) {
 async function carregarClientes() {
   try {
     const data = await sbFetch('/rest/v1/admin_clientes?order=created_at.desc');
-    if(data && Array.isArray(data)) {
+    if (data && Array.isArray(data)) {
       clientes = data.map(c => ({
-        nome: c.nome,
-        slug: c.slug,
-        url: BASE_LOGISTA + '?loja=' + c.slug,
-        urlCardapio: BASE_CARDAPIO + '?loja=' + c.slug,
-        data: new Date(c.created_at).toLocaleDateString('pt-BR'),
-        ts: new Date(c.created_at).getTime()
+        nome:       c.nome,
+        slug:       c.slug,
+        plano:      c.plano || 'mensal',
+        vencimento: c.vencimento || '',
+        whatsapp:   c.whatsapp || '',
+        url:        BASE_LOGISTA  + '?loja=' + c.slug,
+        urlCardapio:BASE_CARDAPIO + '?loja=' + c.slug,
+        data:       new Date(c.created_at).toLocaleDateString('pt-BR'),
+        ts:         new Date(c.created_at).getTime()
       }));
       renderLista();
     }
   } catch(e) { console.warn('Erro ao carregar clientes:', e); }
 }
 
-async function salvarClienteSupabase(nome, slug) {
+async function salvarClienteSupabase(cliente) {
   try {
     await sbFetch('/rest/v1/admin_clientes', {
       method: 'POST',
       prefer: 'return=minimal',
-      body: JSON.stringify({ nome, slug, created_at: new Date().toISOString() })
+      body: JSON.stringify({
+        nome:       cliente.nome,
+        slug:       cliente.slug,
+        plano:      cliente.plano,
+        vencimento: cliente.vencimento || null,
+        whatsapp:   cliente.whatsapp || null,
+        created_at: new Date().toISOString()
+      })
     });
   } catch(e) { console.warn('Erro ao salvar cliente:', e); }
 }
@@ -246,14 +336,14 @@ async function removerClienteSupabase(slug) {
   } catch(e) { console.warn('Erro ao remover cliente:', e); }
 }
 
+// ── AUTH ──
 async function login() {
   const u = document.getElementById('inp-user').value.trim();
   const p = document.getElementById('inp-pass').value;
-  if (u === USER && checkAdminPass(p)) {
+  if (u === ADMIN_USER && btoa(p) === ADMIN_PASS_HASH) {
     adminLogado = true;
     document.getElementById('login-screen').style.display = 'none';
-    const painel = document.getElementById('painel');
-    painel.style.display = 'flex';
+    document.getElementById('painel').style.display = 'flex';
     await carregarClientes();
   } else {
     document.getElementById('login-error').style.display = 'block';
@@ -268,6 +358,7 @@ function logout() {
   document.getElementById('inp-pass').value = '';
 }
 
+// ── SLUG AUTO ──
 function autoSlug() {
   if (slugManual) return;
   const nome = document.getElementById('inp-nome').value;
@@ -278,12 +369,19 @@ function autoSlug() {
     .trim().replace(/\s+/g,'-');
 }
 
+// ── GERAR CLIENTE ──
 async function gerarCliente() {
-  const nome = document.getElementById('inp-nome').value.trim();
-  const slug = document.getElementById('inp-slug').value.trim();
+  const nome       = document.getElementById('inp-nome').value.trim();
+  const slug       = document.getElementById('inp-slug').value.trim();
+  const plano      = document.getElementById('inp-plano').value;
+  const vencimento = document.getElementById('inp-vencimento').value;
+  const whatsapp   = document.getElementById('inp-wpp').value.trim();
+
   if (!nome || !slug) { alert('Preencha o nome e o ID do link.'); return; }
+
   const urlLogista  = BASE_LOGISTA  + '?loja=' + slug;
   const urlCardapio = BASE_CARDAPIO + '?loja=' + slug;
+
   document.getElementById('link-url').textContent = urlLogista;
   document.getElementById('link-cardapio').textContent = urlCardapio;
   document.getElementById('link-cardapio-wrap').style.display = 'flex';
@@ -291,104 +389,144 @@ async function gerarCliente() {
   const btn = document.getElementById('btn-copy');
   btn.textContent = '📋 Copiar';
   btn.className = 'btn-copy';
+
   if (!clientes.find(c => c.slug === slug)) {
-    await salvarClienteSupabase(nome, slug);
-    clientes.unshift({ nome, slug, url: urlLogista, urlCardapio, data: new Date().toLocaleDateString('pt-BR'), ts: Date.now() });
+    const novo = { nome, slug, plano, vencimento, whatsapp, url: urlLogista, urlCardapio, data: new Date().toLocaleDateString('pt-BR'), ts: Date.now() };
+    await salvarClienteSupabase(novo);
+    clientes.unshift(novo);
     renderLista();
     atualizarStats();
+    mostrarToast('✅ Cliente criado com sucesso!');
   }
+
   document.getElementById('inp-nome').value = '';
   document.getElementById('inp-slug').value = '';
+  document.getElementById('inp-vencimento').value = '';
+  document.getElementById('inp-wpp').value = '';
   slugManual = false;
 }
 
-function copiar(url) {
-  const link = url || document.getElementById('link-url').textContent;
+// ── COPIAR ──
+function copiar() {
+  const link = document.getElementById('link-url').textContent;
   navigator.clipboard.writeText(link);
   const btn = document.getElementById('btn-copy');
-  btn.textContent = '✅ Copiado!';
-  btn.className = 'btn-copy ok';
+  btn.textContent = '✅ Copiado!'; btn.className = 'btn-copy ok';
   setTimeout(() => { btn.textContent = '📋 Copiar'; btn.className = 'btn-copy'; }, 2000);
 }
 
 function copiarCardapio() {
   const link = document.getElementById('link-cardapio').textContent;
   navigator.clipboard.writeText(link);
-  const btn = event.currentTarget;
-  const orig = btn.textContent;
-  btn.textContent = '✅ Copiado!';
-  btn.style.color = 'var(--green)';
-  btn.style.borderColor = 'var(--green)';
-  setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  mostrarToast('✅ Link do cardápio copiado!');
 }
 
-function copiarCliente(url) {
+function copiarCliente(url, btnEl) {
   navigator.clipboard.writeText(url);
+  const orig = btnEl.textContent;
+  btnEl.textContent = '✅'; btnEl.style.color = 'var(--green)';
+  setTimeout(() => { btnEl.textContent = orig; btnEl.style.color = ''; }, 2000);
 }
 
-function copiarMostrar(url, btnId) {
-  navigator.clipboard.writeText(url);
-  const btn = document.getElementById(btnId);
-  if(btn) {
-    const orig = btn.textContent;
-    btn.textContent = '✅ Copiado!';
-    btn.style.color = 'var(--green)';
-    btn.style.borderColor = 'var(--green)';
-    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
-  }
-}
-
+// ── REMOVER ──
 async function remover(slug) {
-  if (!confirm('Remover este cliente?')) return;
+  if (!confirm('Remover este cliente? Esta ação não pode ser desfeita.')) return;
   await removerClienteSupabase(slug);
   clientes = clientes.filter(c => c.slug !== slug);
   renderLista();
   atualizarStats();
+  mostrarToast('🗑 Cliente removido.');
 }
 
-// salvar() replaced by Supabase
+// ── EXPORTAR CSV ──
+function exportarCSV() {
+  if (!clientes.length) { mostrarToast('Nenhum cliente para exportar.'); return; }
+  const header = ['Nome','Slug','Plano','Vencimento','WhatsApp','Cadastro','Link Logista','Link Cardápio'];
+  const rows = clientes.map(c => [
+    `"${c.nome}"`, c.slug, c.plano, c.vencimento || '', c.whatsapp || '', c.data,
+    c.url, c.urlCardapio
+  ]);
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `clientes_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  mostrarToast('✅ CSV exportado!');
+}
 
+// ── STATS ──
 function iniciais(nome) {
   return nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
 }
 
 function atualizarStats() {
   const hoje = new Date().toLocaleDateString('pt-BR');
-  const mes = new Date().toLocaleDateString('pt-BR',{month:'numeric',year:'numeric'});
-  document.getElementById('stat-total').textContent = clientes.length;
-  document.getElementById('stat-hoje').textContent = clientes.filter(c=>c.data===hoje).length;
-  document.getElementById('stat-mes').textContent = clientes.filter(c=>{
+  const mes  = new Date().toLocaleDateString('pt-BR',{month:'numeric',year:'numeric'});
+  document.getElementById('stat-total').textContent  = clientes.length;
+  document.getElementById('stat-hoje').textContent   = clientes.filter(c=>c.data===hoje).length;
+  document.getElementById('stat-mes').textContent    = clientes.filter(c=>{
     const d = new Date(c.ts);
     return d.toLocaleDateString('pt-BR',{month:'numeric',year:'numeric'})===mes;
   }).length;
+  document.getElementById('stat-vencendo').textContent = clientes.filter(c=>{
+    const s = statusVencimento(c.vencimento);
+    return s.classe === 'badge-vencendo' || s.classe === 'badge-vencido';
+  }).length;
 }
 
+// ── RENDER LISTA ──
 function renderLista() {
   atualizarStats();
-  const el = document.getElementById('lista');
-  if (!clientes.length) {
-    el.innerHTML = '<div class="empty">Nenhum cliente ainda. Gere o primeiro link acima.</div>';
+  const el    = document.getElementById('lista');
+  const busca = document.getElementById('busca-cliente').value.toLowerCase();
+  const filtro = document.getElementById('filtro-status').value;
+
+  let lista = clientes.filter(c => {
+    const matchBusca = !busca || c.nome.toLowerCase().includes(busca) || c.slug.includes(busca);
+    if (!matchBusca) return false;
+    if (filtro === 'todos') return true;
+    const s = statusVencimento(c.vencimento).classe;
+    if (filtro === 'ativo')     return s === 'badge-ativo';
+    if (filtro === 'vencendo')  return s === 'badge-vencendo';
+    if (filtro === 'vencido')   return s === 'badge-vencido';
+    return true;
+  });
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty">Nenhum cliente encontrado.</div>';
     return;
   }
-  el.innerHTML = clientes.map(c => `
+
+  el.innerHTML = lista.map((c, i) => {
+    const sv = statusVencimento(c.vencimento);
+    const planoLabel = { mensal:'Mensal', trimestral:'Trimestral', anual:'Anual' }[c.plano] || c.plano;
+    const metaParts = [planoLabel];
+    if (c.vencimento) metaParts.push('Vence: ' + new Date(c.vencimento+'T00:00:00').toLocaleDateString('pt-BR'));
+    if (c.whatsapp)   metaParts.push('📱 ' + c.whatsapp);
+    return `
     <div class="client-row">
       <div class="avatar">${iniciais(c.nome)}</div>
       <div class="client-info">
         <div class="client-name">${c.nome}</div>
-        <div class="client-slug">?loja=${c.slug} &nbsp;·&nbsp; ${c.data}</div>
+        <div class="client-slug">?loja=${c.slug} · ${c.data}</div>
+        <div class="client-meta">${metaParts.join(' · ')}</div>
       </div>
-      <span class="badge-ativo">Ativo</span>
+      <span class="${sv.classe}">${sv.label}</span>
       <div class="row-btns">
-        <button class="btn-sm" onclick="copiarCliente('${c.url}')">📋 Link</button>
+        <button class="btn-sm" onclick="window.open('${c.urlCardapio}','_blank')">👁 Ver</button>
+        <button class="btn-sm" id="btncp-${i}" onclick="copiarCliente('${c.url}',this)">📋 Link</button>
         <button class="btn-sm danger" onclick="remover('${c.slug}')">🗑</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
-// Verifica se já está logado ao carregar
-window.addEventListener('DOMContentLoaded', async () => {
-  // Sem auto-login — o admin deve logar a cada sessão (segurança)
-  // adminLogado começa false; o login é feito manualmente
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  // Preenche vencimento padrão (30 dias)
+  const d = new Date(); d.setDate(d.getDate()+30);
+  document.getElementById('inp-vencimento').value = d.toISOString().slice(0,10);
 });
 </script>
 </body>
