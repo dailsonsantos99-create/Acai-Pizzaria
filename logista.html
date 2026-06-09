@@ -1131,7 +1131,7 @@ function confirmAcai(){
 
 /* ── CARRINHO ── */
 function openCheckout(){
-  document.getElementById("checkout-items")?.innerHTML=carrinho.map((item,idx)=>
+  const _ci=document.getElementById("checkout-items"); if(_ci) _ci.innerHTML=carrinho.map((item,idx)=>
     `<div class="checkout-item">
       <div class="checkout-item-info">
         <div class="name">1× ${item.name}</div>
@@ -1143,9 +1143,9 @@ function openCheckout(){
       </div>
     </div>`).join("");
   const sub=carrinho.reduce((a,i)=>a+i.price,0);
-  document.getElementById("summary-subtotal")?.innerText=fmt(sub);
-  document.getElementById("summary-delivery-tax")?.innerText=fmt(configs.tax);
-  document.getElementById("summary-total")?.innerText=fmt(sub+parseFloat(configs.tax));
+  const _ss=document.getElementById("summary-subtotal"); if(_ss) _ss.innerText=fmt(sub);
+  const _sdt=document.getElementById("summary-delivery-tax"); if(_sdt) _sdt.innerText=fmt(configs.tax);
+  const _st=document.getElementById("summary-total"); if(_st) _st.innerText=fmt(sub+parseFloat(configs.tax));
   document.getElementById("checkout-modal")?.style.display="flex";
 }
 function removerItem(idx){carrinho.splice(idx,1);atualizarCarrinhoBar();if(carrinho.length===0)closeModal("checkout-modal");else openCheckout();}
@@ -1153,7 +1153,7 @@ function toggleTroco(v){document.getElementById("troco-wrapper")?.style.display=
 function closeModal(id){document.getElementById(id).style.display="none";}
 function buscarCEP(cep){
   const v=cep.replace(/\D/g,"");
-  if(v.length===8)fetch(`https://viacep.com.br/ws/${v}/json/`).then(r=>r.json()).then(d=>{if(!d.erro){document.getElementById("client-street")?.value=d.logradouro;document.getElementById("client-bairro")?.value=d.bairro;}});
+  if(v.length===8)fetch(`https://viacep.com.br/ws/${v}/json/`).then(r=>r.json()).then(d=>{if(!d.erro){const _cs=document.getElementById("client-street"); if(_cs) _cs.value=d.logradouro; const _cb=document.getElementById("client-bairro"); if(_cb) _cb.value=d.bairro;}});
 }
 
 /* ── ADMIN ── */
@@ -1507,7 +1507,7 @@ async function enviarPedido(){
   const numeroDestino = "55" + (configs.whatsappLogista || configs.whatsapp).replace(/\D/g,"").replace(/^55/,"");
   window.open(`https://api.whatsapp.com/send?phone=${numeroDestino}&text=${encodeURIComponent(msg)}`, '_blank');
   closeModal("checkout-modal");
-  if(pag==="PIX"){document.getElementById("pix-key-text")?.innerText=configs.pix;document.getElementById("pix-display-box")?.style.display="block";}
+  if(pag==="PIX"){const _pk=document.getElementById("pix-key-text"); if(_pk) _pk.innerText=configs.pix; const _pdb=document.getElementById("pix-display-box"); if(_pdb) _pdb.style.display="block";}
   else document.getElementById("pix-display-box")?.style.display="none";
   document.getElementById("success-modal")?.style.display="flex";
   // Registra pedido no histórico do lojista
