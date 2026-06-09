@@ -982,6 +982,19 @@ async function salvarNoSupabase(tentativa = 1) {
     throw e;
   }
 }
+// ── DEBOUNCE — evita salvar no banco a cada tecla ──
+function debounce(fn, delay = 800) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+const _salvarDebounced = debounce(async () => {
+  await salvarNoSupabase();
+  mostrarToast('✅ Salvo!');
+}, 900);
+
 
 /* ── DEFAULTS ── */
 const defaultConfigs={whatsapp:"",whatsappLogista:"",pix:"",tax:5,name:"Meu Estabelecimento",nameSecondary:"",desc:"",colorPrimary:"#9333ea",colorSecondary:"#c026d3",logo:"",banner:"",meioAMeio:false,abaPizzas:true,abaAcai:true,abaBebidas:true,nomePizzas:"Pizzas",nomeAcai:"Açaí Premium",nomeBebidas:"Bebidas",emojPizzas:"🍕",emojAcai:"🍧",emojBebidas:"🥤",adminSenha:"1234"};
@@ -1299,7 +1312,7 @@ function fileToB64(file){
 async function trocarImgPizza(id){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
   inp.onchange=async()=>{
-    const b64=await fileToB64(inp.files[0]);
+    const b64 = await comprimirImagem(inp.files[0], 600, 0.75);
     pizzas=pizzas.map(p=>p.id===id?{...p,img:b64}:p);
     renderAdminPizzas(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
@@ -1308,7 +1321,7 @@ async function trocarImgPizza(id){
 async function trocarImgAcai(id){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
   inp.onchange=async()=>{
-    const b64=await fileToB64(inp.files[0]);
+    const b64 = await comprimirImagem(inp.files[0], 600, 0.75);
     acais=acais.map(a=>a.id===id?{...a,img:b64}:a);
     renderAdminAcais(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
@@ -1317,7 +1330,7 @@ async function trocarImgAcai(id){
 async function trocarImgBebida(id){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
   inp.onchange=async()=>{
-    const b64=await fileToB64(inp.files[0]);
+    const b64 = await comprimirImagem(inp.files[0], 600, 0.75);
     bebidas=bebidas.map(b=>b.id===id?{...b,img:b64}:b);
     renderAdminBebidas(); renderMenu(); await salvarNoSupabase(); mostrarToast('✅ Foto salva!');
   };
@@ -1490,6 +1503,7 @@ function atualizarNomeSecao(){
     if(elEmoj && emoj) elEmoj.textContent = emoj;
   });
   renderTabs();
+  _salvarDebounced();
 }
 
 function checkWppFilled(){
@@ -1520,6 +1534,8 @@ async function toggleMeioAMeio(val){
     span.querySelector('span').style.background = val ? '#fff' : 'var(--muted)';
   }
   renderMenu();
+  await salvarNoSupabase();
+  mostrarToast('✅ Seções atualizadas!');
   await salvarNoSupabase();
 }
 async function deletarPizza(id){if(confirm("Remover pizza?")){pizzas=pizzas.filter(p=>p.id!==id);renderAdminPizzas();renderMenu();await salvarNoSupabase();mostrarToast('🗑 Pizza removida.');}}
@@ -1639,10 +1655,28 @@ function showAdminPage(pageId, btn){
 }
 
 /* ── LOGO ── */
+
+// ── COMPRESSÃO DE IMAGEM — reduz tamanho antes de salvar no banco ──
+function comprimirImagem(file, maxW = 800, qualidade = 0.75) {
+  return new Promise(res => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      res(canvas.toDataURL('image/jpeg', qualidade));
+    };
+    img.src = url;
+  });
+}
 async function trocarBanner(){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
   inp.onchange=async()=>{
-    const b64=await fileToB64(inp.files[0]);
+    const b64 = await comprimirImagem(inp.files[0], 1200, 0.80);
     configs.banner=b64;
     atualizarBanner();
     await salvarNoSupabase();
@@ -1676,8 +1710,9 @@ function trocarLogo(){
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
   inp.onchange=async()=>{
     const r=new FileReader();
-    r.onload=async()=>{
-      configs.logo=r.result;
+    inp.onchange=async()=>{
+    const b64=await comprimirImagem(inp.files[0],300,0.80);
+    configs.logo=b64;
       aplicarMarca();
       atualizarLogoPreview();
       await salvarNoSupabase();
